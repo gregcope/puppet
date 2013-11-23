@@ -351,7 +351,6 @@ mount { '/var/lib/mythtv/pictures':
 
 # install some packages :-)
 package { 'vim': ensure => 'installed'}
-package { 'git': }
 package { 'sysstat': }
 package { 'iotop': }
 package { 'denyhosts': }
