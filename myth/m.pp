@@ -1,5 +1,5 @@
 # set some defaults before we go...
-$mysqlPassword = m21cat
+$mysqlPassword = 
 
 # lets make sure we have 0.27 installed
 package { 'libmyth-0.27-0':
