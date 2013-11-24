@@ -374,7 +374,7 @@ exec { 'unzipinstallwebpagetest':
 }
 
 # mv the .files....
-exec { 'unzipinstallwebpagetest':
+exec { 'installTheDotFiles':
     logoutput => true,
     cwd => '/tmp',
     user => 'root',
