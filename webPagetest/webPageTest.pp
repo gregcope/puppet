@@ -154,6 +154,7 @@ mailalias { 'logcheck':
 
 # install some packages :-)
 package { 'php-apc': }
+package { 'ffmpeg': }
 package { 'apache2': }
 package { 'libapache2-mod-php5': }
 package { 'zip': }
