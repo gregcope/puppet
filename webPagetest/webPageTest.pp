@@ -1,8 +1,8 @@
 # set some defaults before we go...
 $webpagetestVersion = '2.13'
 $webpagetestzipmd5sum = '1997e1ad5e70d9dd2276ae9d6cbc75de'
-$wpt_key = 'foobarbazasfasd123'
-$wpt_server = '54.246.233.251'
+$wpt_key = '61c74f0abc0cc3c018963bf72191aff6'
+$wpt_server = '54.194.0.124'
 
 # should not need to change anything below this line
 $apache2_sites = '/etc/apache2/sites'
