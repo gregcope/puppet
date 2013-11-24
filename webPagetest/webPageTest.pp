@@ -381,7 +381,7 @@ exec { 'setwptServeIP':
 exec { 'setwptkey':
     logoutput => true,
     command => "/usr/bin/perl -p -i -e \"s/wpt_key=SecretKey/wpt_key=$wpt_key/g\" /var/www/webpagetest/settings/locations.ini",
-    unless => '/bin/grep "wpt_key=SecretKey" /var/www/webpagetest/settings/locations.ini',
+    unless => "/bin/grep \"wpt_key=$wpt_key\" /var/www/webpagetest/settings/locations.ini",
     require => Exec [ 'unzipinstallwebpagetest' ],
 }
 
