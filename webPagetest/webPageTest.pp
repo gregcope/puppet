@@ -396,7 +396,6 @@ exec { 'renameLocationsIniEC2Sample':
     notify => [ Exec [ 'setwptkey' ], Exec [ 'setwptServeIP' ] ],
 }
 
-key=
 exec { 'setKeyinLocations.ini':
     logoutput => true,
     command => "/usr/bin/perl -p -i -e \"s/key=SecretKey/key=$wpt_key/g\" /var/www/webpagetest/settings/locations.ini"    ,
