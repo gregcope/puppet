@@ -1,5 +1,5 @@
 # set some defaults before we go...
-$mysqlPassword = 
+$mysqlPassword = foo
 $apache2_sites = '/etc/apache2/sites'
 $apache2_mods = '/etc/apache2/mods'
 
