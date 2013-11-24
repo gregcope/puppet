@@ -400,7 +400,7 @@ exec { 'renameLocationsIniEC2Sample':
 exec { 'setKeyinLocations.ini':
     logoutput => true,
     command => "/usr/bin/perl -p -i -e \"s/key=SecretKey/key=$wpt_key/g\" /var/www/webpagetest/settings/locations.ini"    ,
-    if => "/bin/grep \"key=$wpt_key\" /var/www/webpagetest/settings/locations.ini",
+    unless => "/bin/grep \"key=$wpt_key\" /var/www/webpagetest/settings/locations.ini",
     require => Exec [ 'setwptkey' ],
 }
 
