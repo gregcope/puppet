@@ -224,6 +224,7 @@ file { '/etc/apache2/conf.d/etags.conf':
     content => 'FileETag none',
     mode => '0644',
     require => Package [ 'apache2' ]
+
 }
 
 # configure logwatch
@@ -341,7 +342,8 @@ file { '/etc/apache2/conf.d/webpagetest.conf':
     ensure => present,
     mode => '0644',
     content => "<Directory \"/var/www/webpagetest\">\nAllowOverride all\n\tOrder allow,deny\n\tAllow from all\n</Directory>\n<VirtualHost *:80>\n\tDocumentRoot /var/www/webpagetest\n</VirtualHost>\n",
-    require => Package [ 'apache2' ]
+    require => Package [ 'apache2' ],
+    notify => Exec[ 'restart-apache2' ],
 }
 
 # download the zip!
