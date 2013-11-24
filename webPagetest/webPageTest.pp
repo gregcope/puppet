@@ -328,7 +328,7 @@ file { '/var/www/webpagetest':
     owner => 'root',
     group => 'root',
     mode => '0755',
-    require => Package [ 'apache2' ]
+    require => [ Package [ 'apache2' ], Exec [ 'unzipinstallwebpagetest' ] ],
 }
 
 # Ensure Apache user can write to the relevant dirs
@@ -367,21 +367,10 @@ exec { 'unzipinstallwebpagetest':
     logoutput => true,
     cwd => '/tmp',
     user => 'root',
-    command => "/usr/bin/unzip /tmp/webpagetest_$webpagetestVersion.zip && /bin/mv /tmp/www/* /var/www/webpagetest/",
+    command => "/usr/bin/unzip /tmp/webpagetest_$webpagetestVersion.zip && /bin/mv /tmp/www /var/www/webpagetest",
     # I know not perfect!
     unless => '/bin/ls -la /var/www/webpagetest/index.php',
-    require => [ Package ['zip' ], Exec [ 'wgetwebpagetest' ], File [ '/var/www/webpagetest' ] ],
-}
-
-# mv the .files....
-exec { 'installTheDotFiles':
-    logoutput => true,
-    cwd => '/tmp',
-    user => 'root',
-    command => "/bin/mv /tmp/www/.* /var/www/webpagetest/",
-    # I know not perfect!
-    unless => '/bin/ls -la /var/www/webpagetest/.htaccess',
-    require => [ Package ['zip' ], Exec [ 'wgetwebpagetest' ], File [ '/var/www/webpagetest' ] ],
+    require => [ Package ['zip' ], Exec [ 'wgetwebpagetest' ] ],
 }
 
 # set the location of the wpt server IP
