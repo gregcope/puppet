@@ -591,6 +591,15 @@ exec { 'wgetinstallpageSpeedDeb':
     notify => Exec['restart-apache2'],
 }
 
+# correct the pagespeed cache dir perms to avoid
+# [Sun Nov 24 08:56:47 2013] [error] [mod_pagespeed 1.6.29.7-3566 @11078] Failed to mkdir /var/cache/mod_pagespeed/!clean!lock!: Permission denied
+file { '/var/cache/mod_pagespeed':
+    ensure => 'directory',
+    owner => 'www-data',
+    group => 'www-data'
+    mode => '0750',
+}
+
 # install spdy deb unless it is not installed
 # call notify restart
 # https://dl-ssl.google.com/dl/linux/direct/mod-spdy-beta_current_amd64.deb
