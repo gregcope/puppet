@@ -367,7 +367,7 @@ exec { 'unzipinstallwebpagetest':
     logoutput => true,
     cwd => '/tmp',
     user => 'root',
-    command => "/usr/bin/unzip /tmp/webpagetest_$webpagetestVersion.zip && mv /tmp/www/* /var/www/webpagetest/",
+    command => "/usr/bin/unzip /tmp/webpagetest_$webpagetestVersion.zip && /bin/mv /tmp/www/* /var/www/webpagetest/",
     # I know not perfect!
     unless => '/bin/ls -la /var/www/webpagetest/index.php',
     require => [ Package ['zip' ], Exec [ 'wgetwebpagetest' ], File [ '/var/www/webpagetest' ] ],
@@ -378,7 +378,7 @@ exec { 'installTheDotFiles':
     logoutput => true,
     cwd => '/tmp',
     user => 'root',
-    command => "mv /tmp/www/.* /var/www/webpagetest/",
+    command => "/bin/mv /tmp/www/.* /var/www/webpagetest/",
     # I know not perfect!
     unless => '/bin/ls -la /var/www/webpagetest/.htaccess',
     require => [ Package ['zip' ], Exec [ 'wgetwebpagetest' ], File [ '/var/www/webpagetest' ] ],
