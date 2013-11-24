@@ -1,8 +1,8 @@
 # set some defaults before we go...
-$webpagetestVersion=2.13
-$webpagetestzipmd5sum=cf91b6ba13708474e21c0d0a869c06b7
-$wpt_key=c71d5ffaac9736c71bc4791e3769402f
-$wpt_server=127.0.0.1
+$webpagetestVersion = '2.13'
+$webpagetestzipmd5sum = '1997e1ad5e70d9dd2276ae9d6cbc75de'
+$wpt_key = 'foobarbazasfasd123'
+$wpt_server = '54.194.27.111'
 
 # should not need to change anything below this line
 $apache2_sites = '/etc/apache2/sites'
@@ -153,6 +153,8 @@ mailalias { 'logcheck':
 #Exec[ 'apt-dist-updgrade' ] -> Package <| |>
 
 # install some packages :-)
+package { 'apache2': }
+package { 'libapache2-mod-php5': }
 package { 'zip': }
 package { 'vim': ensure => 'installed'}
 package { 'sysstat': }
@@ -169,7 +171,7 @@ package { 'vim-puppet': }
 package { 'bsd-mailx': }
 package { 'augeas-tools': ensure => 'installed' }
 package { 'puppet-lint': }
-package { 'php': }
+package { 'php5': }
 package { 'php5-ffmpeg': }
 package { 'libimage-exiftool-perl': }
 package { 'libjpeg-turbo-progs': }
@@ -189,6 +191,7 @@ file { '/etc/apache2/mythweb-auth':
     ensure => present,
     content => "<Location /mythweb>\n\tAuthType Basic\n\tAuthName mythweb\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.0.0/24\n</Location>",
     mode => '0644',
+    require => Package [ 'apache2' ],
 }
 
 # create a htpasswrod file for mythweb
@@ -196,6 +199,7 @@ file { '/etc/apache2/web-htpassword':
     ensure => present,
     content => 'greg:Q4Z1zApK61s8I',
     mode => '0644',
+    require => Package [ 'apache2' ]
 }
 
 # set a good expires config
@@ -203,6 +207,7 @@ file { '/etc/apache2/mods-available/expires.conf':
     ensure => present,
     content => "<IfModule mod_expires.c>\n\tExpiresActive OnExpiresByType application/x-javascript \"access plus 1 year\"\n\tExpiresByType application/javascript \"access plus 1 year\"\n\tExpiresByType text/css \"access plus 1 year\"\n\tExpiresByType image/* \"access plus 1 year\"\n</IfModule>",
     mode => '0644',
+    require => Package [ 'apache2' ]
 }
 
 # set a good deflate config
@@ -210,6 +215,7 @@ file { '/etc/apache2/mods-enabled/deflate.conf':
     ensure => present,
     content => "IfModule mod_deflate.c>\n\n\t# stuff to deflate\n\tAddOutputFilterByType DEFLATE text/plain text/html text/xml text/css\n\tAddOutputFilterByType DEFLATE application/xml application/xhtml+xml\n\tAddOutputFilterByType DEFLATE application/rss+xml application/atom+xml\n\tAddOutputFilterByType DEFLATE application/javascript text/javascript application/x-javascript\n\n\t#DeflateCompressionLevel 9\n\n\t# work arounds for older browsers\n\tBrowserMatch ^Mozilla/4 gzip-only-text/html\n\tBrowserMatch ^Mozilla/4\\.0[678] no-gzip\n\tBrowserMatch \\bMSI[E] !no-gzip !gzip-only-text/html\n\tBrowserMatch \\bMSIE\s6.0 gzip-only-text/html\n\n\t# Make sure proxies don't deliver the wrong content\n\tHeader append Vary User-Agent env=!dont-vary\n\n\t# logging for testing only\n\tDeflateFilterNote Input instream\n\tDeflateFilterNote Output outstream\n\tDeflateFilterNote Ratio ratio\n\t# logs out size / insize % of orig size\n\tLogFormat '\"%r\" %{outstream}n/%{instream}n (%{ratio}n%%)' deflate\n\tCustomLog /var/log/apache2/deflate_log deflate\n</IfModule>",
     mode => '0644',
+    require => Package [ 'apache2' ]
 }
 
 # remove etags
@@ -217,6 +223,7 @@ file { '/etc/apache2/conf.d/etags.conf':
     ensure => present,
     content => 'FileETag none',
     mode => '0644',
+    require => Package [ 'apache2' ]
 }
 
 # configure logwatch
@@ -288,23 +295,26 @@ augeas { '/etc/default/sysstat':
 
 # restart apache if called
 exec { 'restart-apache2':
-   command => '/usr/sbin/service apache2 restart',
-   refreshonly => true,
-   logoutput => true,
+    command => '/usr/sbin/service apache2 restart',
+    refreshonly => true,
+    logoutput => true,
+    require => Package [ 'apache2' ]
 }
 
 # what ever the post_max_size make it 16M
 exec { 'phpinipostmaxsize':
     command => '/usr/bin/perl -p -i -e "s/post_max_size =.*/post_max_size = 16M/g" /etc/php5/apache2/php.ini',
     unless => '/bin/grep "^post_max_size = 16M" /etc/php5/apache2/php.ini',
-    notify => Exec[ 'reload-apache2' ],
+    notify => Exec[ 'restart-apache2' ],
+    require => [ Package [ 'apache2' ], Package [ 'php5' ], Package [ 'libapache2-mod-php5' ] ],
 }
 
 # what ever the upload_max_filesize make it 16M
 exec { 'phpiniuploadmaxsize':
     command => '/usr/bin/perl -p -i -e "s/upload_max_filesize =.*/upload_max_filesize = 16M/g" /etc/php5/apache2/php.ini',
     unless => '/bin/grep "^upload_max_filesize = 16M" /etc/php5/apache2/php.ini',
-    notify => Exec[ 'reload-apache2' ],
+    require => [ Package [ 'apache2' ], Package [ 'php5' ], Package [ 'libapache2-mod-php5' ] ],
+    notify => Exec[ 'restart-apache2' ],
 }
 
 # Create docroot
@@ -313,6 +323,7 @@ file { '/var/www/webpagetest':
     owner => 'root',
     group => 'root',
     mode => '0755',
+    require => Package [ 'apache2' ]
 }
 
 # Ensure Apache user can write to the relevant dirs
@@ -329,7 +340,8 @@ file { [ '/var/www/webpagetest/tmp', '/var/www/webpagetest/results', '/var/www/w
 file { '/etc/apache2/webpagetest.conf':
     ensure => present,
     mode => '0644',
-    content => "<Directory "/var/www/webpagetest">\nAllowOverride all\n\tOrder allow,deny\n\tAllow from all\n</Directory>\n<VirtualHost *:80>\n\tDocumentRoot /var/www/webpagetest\n</VirtualHost>\n",
+    content => "<Directory \"/var/www/webpagetest\">\nAllowOverride all\n\tOrder allow,deny\n\tAllow from all\n</Directory>\n<VirtualHost *:80>\n\tDocumentRoot /var/www/webpagetest\n</VirtualHost>\n",
+    require => Package [ 'apache2' ]
 }
 
 # download the zip!
@@ -340,7 +352,7 @@ exec { 'wgetwebpagetest':
     unless => "/usr/bin/md5sum /tmp/webpagetest_$webpagetestVersion.zip | /bin/grep $webpagetestzipmd5sum",
     logoutput => true,
     user => root,
-    notify => Exec[ 'installwebpagetest' ],
+    require => Package [ 'apache2' ]
 }
 
 # unzip the wpt zip in /tmp and mv the www files to the doc root (/var/www/webpagetest/)
@@ -348,9 +360,8 @@ exec { 'wgetwebpagetest':
 exec { 'unzipinstallwebpagetest':
     logoutput => true,
     cwd => '/tmp',
-    require => File [ 'webpagetest' ],
     user => 'root',
-    command => "/bin/zip /tmp/webpagetest_$webpagetestVersion.zip && mv /tmp/www/* /var/www/webpagetest/",
+    command => "/usr/bin/unzip /tmp/webpagetest_$webpagetestVersion.zip && mv /tmp/www/* /var/www/webpagetest/",
     # I know not perfect!
     unless => '/bin/ls -la /var/www/webpagetest/index.php',
     require => [ Package ['zip' ], Exec [ 'wgetwebpagetest' ], File [ '/var/www/webpagetest' ] ],
@@ -360,8 +371,8 @@ exec { 'unzipinstallwebpagetest':
 # after we've installed wpt files into docroot
 exec { 'setwptServeIP':
     logoutput => true,
-    command => "/usr/bin/perl -p -i -e \"s/wpt_server=www.yourserver.com/wpt_server=$wpt_server/g\" /var/www/webpagetest/settings/locations.ini.EC2",
-    unless => '/bin/grep "wpt_server=www.yourserver.com" /var/www/webpagetest/settinngs/locations.ini.EC2'
+    command => "/usr/bin/perl -p -i -e \"s/wpt_server=www.yourserver.com/wpt_server=$wpt_server/g\" /var/www/webpagetest/settings/locations.ini",
+    unless => "/bin/grep \"wpt_server=$wpt_server\" /var/www/webpagetest/settings/locations.ini",
     require => Exec [ 'unzipinstallwebpagetest' ],
 }
 
@@ -369,19 +380,18 @@ exec { 'setwptServeIP':
 # after we've installed wpt files into docroot
 exec { 'setwptkey':
     logoutput => true,
-    command => "/usr/bin/perl -p -i -e \"s/wpt_key=SecretKey/wpt_key=$wpt_key/g\" /var/www/webpagetest/settings/locations.ini.EC2",
-    unless => '/bin/grep "wpt_key=SecretKey" /var/www/webpagetest/settings/locations.ini.EC2',
+    command => "/usr/bin/perl -p -i -e \"s/wpt_key=SecretKey/wpt_key=$wpt_key/g\" /var/www/webpagetest/settings/locations.ini",
+    unless => '/bin/grep "wpt_key=SecretKey" /var/www/webpagetest/settings/locations.ini',
     require => Exec [ 'unzipinstallwebpagetest' ],
 }
 
-locations.ini.EC2-sample
 # rename the locations.ini.EC2-sample
 # after we've installed wpt files into docroot
 # notify to change wpt settings (x2)
 exec { 'renameLocationsIniEC2Sample':
     logoutput => true,
-    command => '/bin/mv /var/www/webpagetest/settings/locations.ini.sample /var/www/webpagetest/settings/locations.ini.ini',
-    unless => 'ls -la /var/www/webpagetest/settings/locations.ini',
+    command => '/bin/mv /var/www/webpagetest/settings/locations.ini.EC2-sample /var/www/webpagetest/settings/locations.ini',
+    unless => '/bin/ls -la /var/www/webpagetest/settings/locations.ini',
     require => Exec [ 'unzipinstallwebpagetest' ],
     notify => [ Exec [ 'setwptkey' ], Exec [ 'setwptServeIP' ] ],
 }
@@ -391,7 +401,7 @@ exec { 'renameLocationsIniEC2Sample':
 exec { 'renameEc2IniSample':
     logoutput => true,
     command => '/bin/mv /var/www/webpagetest/settings/ec2.ini.sample /var/www/webpagetest/settings/ec2.ini',
-    unless => 'ls -la /var/www/webpagetest/settings/ec2.ini',
+    unless => '/bin/ls -la /var/www/webpagetest/settings/ec2.ini',
     require => Exec [ 'unzipinstallwebpagetest' ]
 }
 
@@ -400,7 +410,7 @@ exec { 'renameEc2IniSample':
 exec { 'renameSettingsIniSample':
     logoutput => true,
     command => '/bin/mv /var/www/webpagetest/settings/settings.ini.sample /var/www/webpagetest/settings/settings.ini',
-    unless => 'ls -la /var/www/webpagetest/settings/settings.ini',
+    unless => '/bin/ls -la /var/www/webpagetest/settings/settings.ini',
     require => Exec [ 'unzipinstallwebpagetest' ],
 }
 
@@ -409,7 +419,7 @@ exec { 'renameSettingsIniSample':
 exec { 'renameKeysIniSample':
     logoutput => true,
     command => '/bin/mv /var/www/webpagetest/settings/keys.ini.sample /var/www/webpagetest/settings/keys.ini',
-    unless => 'ls -la /var/www/webpagetest/settings/keys.ini',
+    unless => '/bin/ls -la /var/www/webpagetest/settings/keys.ini',
     require => Exec [ 'unzipinstallwebpagetest' ],
 }
 
@@ -418,7 +428,7 @@ exec { 'renameKeysIniSample':
 exec { 'renameConnectivityIniSample':
     logoutput => true,
     command => '/bin/mv /var/www/webpagetest/settings/connectivity.ini.sample /var/www/webpagetest/settings/connectivity.ini',
-    unless => 'ls -la /var/www/webpagetest/settings/connectivity.ini',
+    unless => '/bin/ls -la /var/www/webpagetest/settings/connectivity.ini',
     require => Exec [ 'unzipinstallwebpagetest' ],
 }
 
@@ -427,16 +437,16 @@ exec { 'renameConnectivityIniSample':
 exec { 'renameAboutIncSample':
     logoutput => true,
     command => '/bin/mv /var/www/webpagetest/settings/about.inc.sample /var/www/webpagetest/settings/about.inc',
-    unless => 'ls -la /var/www/webpagetest/settings/about.inc',
+    unless => '/bin/ls -la /var/www/webpagetest/settings/about.inc',
     require => Exec [ 'unzipinstallwebpagetest' ],
 }
 
 # rename the custom.css.sample
 # after we've installed wpt files into docroot
- exec { 'renameAboutIncSample':
+ exec { 'renameCustomCssSample':
      logoutput => true,
      command => '/bin/mv /var/www/webpagetest/settings/custom.css.sample /var/www/webpagetest/settings/custom.css',
-     unless => 'ls -la /var/www/webpagetest/settings/custom.css',
+     unless => '/bin/ls -la /var/www/webpagetest/settings/custom.css',
      require => Exec [ 'unzipinstallwebpagetest' ],
 }
 
@@ -445,7 +455,7 @@ exec { 'renameAboutIncSample':
 exec { 'renamefeedsIncSample':
     logoutput => true,
     command => '/bin/mv /var/www/webpagetest/settings/feeds.inc.sample /var/www/webpagetest/settings/feeds.inc',
-    unless => 'ls -la /var/www/webpagetest/settings/feeds.inc',
+    unless => '/bin/ls -la /var/www/webpagetest/settings/feeds.inc',
     require => Exec [ 'unzipinstallwebpagetest' ],
 }
 
