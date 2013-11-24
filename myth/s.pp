@@ -393,12 +393,12 @@ augeas { 'postfix-main.cf':
 # setup basic auth for mythweb from non-lan IPs
 file { '/etc/apache2/mythweb-auth':
     ensure => present,
-    content => "<Location /mythweb>\n\tAuthType Basic\n\tAuthName mythweb\n\tAuthUserFile /etc/apache2/mythweb-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.0.1/24\n</Location>",
+    content => "<Location /mythweb>\n\tAuthType Basic\n\tAuthName mythweb\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.0.0/24\n</Location>",
     mode => '0644',
 }
 
 # create a htpasswrod file for mythweb
-file { '/etc/apache2/mythweb-htpassword':
+file { '/etc/apache2/web-htpassword':
     ensure => present,
     content => 'greg:Q4Z1zApK61s8I',
     mode => '0644',
@@ -591,12 +591,36 @@ exec { 'wgetinstallpageSpeedDeb':
     notify => Exec['restart-apache2'],
 }
 
+# enabled ModPagespeed instrumentation
+exec { 'ModPagespeedEnableFilters_add_instrumentation':
+    logoutput => true,
+    unless => '/bin/grep "    ModPagespeedEnableFilters add_instrumentation" /etc/apache2/mods-available/pagespeed.conf',
+    command => '/usr/bin/perl -p -i -e \'s/    # ModPagespeedEnableFilters add_instrumentation/    ModPagespeedEnableFilters add_instrumentation/\' /etc/apache2/mods-available/pagespeed.conf',
+    notify => Exec['restart-apache2'],
+}
+
+# enable ModPagespeed ReportUnloadTime
+exec { 'ModPagespeedReportUnloadTime_on':
+    logoutput => true,
+    unless => '/bin/grep "    ModPagespeedReportUnloadTime on" /etc/apache2/mods-available/pagespeed.conf',
+    command => '/usr/bin/perl -p -i -e \'s/    # ModPagespeedReportUnloadTime on/    ModPagespeedReportUnloadTime on/\' /etc/apache2/mods-available/pagespeed.conf',
+    notify => Exec['restart-apache2'],
+}
+
+# Allow access form LAN
+exec { 'AllowFromLAN':
+    logoutput => true,
+    unless => '/bin/grep "        Allow from 192.168.0.0/24" /etc/apache2/mods-available/pagespeed.conf',
+    command => '/usr/bin/perl -p -i -e \'s/        Allow from 127.0.0.1/        Allow from 192.168.0.0\/24/g\' /etc/apache2/mods-available/pagespeed.conf',
+    notify => Exec['restart-apache2'],
+}
+
 # correct the pagespeed cache dir perms to avoid
 # [Sun Nov 24 08:56:47 2013] [error] [mod_pagespeed 1.6.29.7-3566 @11078] Failed to mkdir /var/cache/mod_pagespeed/!clean!lock!: Permission denied
 file { '/var/cache/mod_pagespeed':
     ensure => 'directory',
     owner => 'www-data',
-    group => 'www-data'
+    group => 'www-data',
     mode => '0750',
 }
 
