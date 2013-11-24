@@ -396,6 +396,14 @@ exec { 'renameLocationsIniEC2Sample':
     notify => [ Exec [ 'setwptkey' ], Exec [ 'setwptServeIP' ] ],
 }
 
+key=
+exec { 'setKeyinLocations.ini':
+    logoutput => true,
+    command => "/usr/bin/perl -p -i -e \"s/key=SecretKey/key=$wpt_key/g\" /var/www/webpagetest/settings/locations.ini"    ,
+    unless => "/bin/grep \"key=SecretKey\" /var/www/webpagetest/settings/locations.ini",
+    require => Exec [ 'setwptkey' ],
+}
+
 # rename the ec2.ini.sample
 # after we've installed wpt files into docroot
 exec { 'renameEc2IniSample':
