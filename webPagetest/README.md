@@ -1,7 +1,8 @@
-WebPageTest Private instance Webserver Puppet manifest
-""""""""""""""""""""""""""""""""""""""""""""""""""""""
+# WebPageTest Private instance Webserver Puppet manifest #
 
 __Ok - its a huge bodge of a manifest and I will burn in Puppet style hell__
+
+Based on: [https://sites.google.com/a/webpagetest.org/docs/private-instances]
 
 Notes;
 * You need to change a few lines at the top of the file
