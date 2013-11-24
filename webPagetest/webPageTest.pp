@@ -153,6 +153,7 @@ mailalias { 'logcheck':
 #Exec[ 'apt-dist-updgrade' ] -> Package <| |>
 
 # install some packages :-)
+package { 'php-apc': }
 package { 'apache2': }
 package { 'libapache2-mod-php5': }
 package { 'zip': }
