@@ -337,7 +337,7 @@ file { [ '/var/www/webpagetest/tmp', '/var/www/webpagetest/results', '/var/www/w
 }
 
 # simple config file
-file { '/etc/apache2/webpagetest.conf':
+file { '/etc/apache2/conf.d/webpagetest.conf':
     ensure => present,
     mode => '0644',
     content => "<Directory \"/var/www/webpagetest\">\nAllowOverride all\n\tOrder allow,deny\n\tAllow from all\n</Directory>\n<VirtualHost *:80>\n\tDocumentRoot /var/www/webpagetest\n</VirtualHost>\n",
@@ -376,7 +376,7 @@ exec { 'setwptServeIP':
     require => Exec [ 'unzipinstallwebpagetest' ],
 }
 
-# set out wpt key
+# set our wpt key
 # after we've installed wpt files into docroot
 exec { 'setwptkey':
     logoutput => true,
@@ -396,10 +396,11 @@ exec { 'renameLocationsIniEC2Sample':
     notify => [ Exec [ 'setwptkey' ], Exec [ 'setwptServeIP' ] ],
 }
 
+# set another secrete key
 exec { 'setKeyinLocations.ini':
     logoutput => true,
     command => "/usr/bin/perl -p -i -e \"s/key=SecretKey/key=$wpt_key/g\" /var/www/webpagetest/settings/locations.ini"    ,
-    unless => "/bin/grep \"key=$wpt_key\" /var/www/webpagetest/settings/locations.ini",
+    if => "/bin/grep \"key=$wpt_key\" /var/www/webpagetest/settings/locations.ini",
     require => Exec [ 'setwptkey' ],
 }
 
