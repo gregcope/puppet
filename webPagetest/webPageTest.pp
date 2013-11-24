@@ -373,6 +373,17 @@ exec { 'unzipinstallwebpagetest':
     require => [ Package ['zip' ], Exec [ 'wgetwebpagetest' ], File [ '/var/www/webpagetest' ] ],
 }
 
+# mv the .files....
+exec { 'unzipinstallwebpagetest':
+    logoutput => true,
+    cwd => '/tmp',
+    user => 'root',
+    command => "mv /tmp/www/.* /var/www/webpagetest/",
+    # I know not perfect!
+    unless => '/bin/ls -la /var/www/webpagetest/.htaccess',
+    require => [ Package ['zip' ], Exec [ 'wgetwebpagetest' ], File [ '/var/www/webpagetest' ] ],
+}
+
 # set the location of the wpt server IP
 # after we've installed wpt files into docroot
 exec { 'setwptServeIP':
