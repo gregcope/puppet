@@ -13,3 +13,13 @@ Notes;
 * To install `sudo puppet apply webPageTest.pp`
 * Send bug reports, money, gifts to <gregcope@gmail.com>, complaints to /dev/null, if it breaks you get to keep all the bits
 * Njoy!
+
+To get an EC instance up and running;
+# lauch it (12.04 TLS)!
+# login (hint `ssh -i YOUR KEY.pm ubunut@${publicIP}`)
+# `sudo apt-get update`
+# `sudo apt-get -y upgrade`
+# `sudo apt-get -y install puppet`
+# `wget https://raw.github.com/gregcope/puppet/master/webPagetest/webPageTest.pp`
+# `sudo puppet apply webPageTest.pp`
+# profit?
