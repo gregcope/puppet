@@ -91,6 +91,12 @@ class apache inherits apache2 {
     apache2::module { 'deflate':
         ensure => present
     }
+    apache2::module { 'ssl':
+        ensure => present
+    }
+    apache2::site { 'default-ssl':
+        ensure => present
+    }
 }
 
 # stop puppet running on this host
