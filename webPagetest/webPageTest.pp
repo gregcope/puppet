@@ -277,7 +277,7 @@ file { '/etc/logrotate.d/compress':
 # remount / with noatime,nodiratime opts
 mount { '/':
     ensure => present,
-    device => 'UUID=14798928-e487-4208-bf07-a67f0ed3398f',
+    device => 'cloudimg-rootfs',
     atboot => yes,
     fstype => ext4,
     dump => 0,
