@@ -15,11 +15,11 @@ Notes;
 * Njoy!
 
 To get an EC instance up and running;
-1. lauch it (12.04 TLS)!
-2. login (hint `ssh -i YOUR KEY.pm ubunut@${publicIP}`)
-3. run an update `sudo apt-get update`
-4. run an upgrade `sudo apt-get -y upgrade`
-5. install puppet  `sudo apt-get -y install puppet`
-6. get the manifest `wget https://raw.github.com/gregcope/puppet/master/webPagetest/webPageTest.pp`
-7. run the manifest `sudo puppet apply webPageTest.pp`
-8. End:  profit?
+* lauch it (12.04 TLS)!
+* login (hint `ssh -i YOUR KEY.pm ubunut@${publicIP}`)
+* run an update `sudo apt-get update`
+* run an upgrade `sudo apt-get -y upgrade`
+* install puppet  `sudo apt-get -y install puppet`
+* get the manifest `wget https://raw.github.com/gregcope/puppet/master/webPagetest/webPageTest.pp`
+* run the manifest `sudo puppet apply webPageTest.pp`
+* End:  profit?
