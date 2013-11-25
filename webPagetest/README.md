@@ -21,6 +21,6 @@ To get an EC instance up and running;
 * run an upgrade `sudo apt-get -y upgrade`
 * install puppet  `sudo apt-get -y install puppet`
 * get the manifest `wget https://raw.github.com/gregcope/puppet/master/webPagetest/webPageTest.pp`
-* Change the `wpt_key` and `wpt_server` (hit ${EC2InstancepublicIP})
+* Change the `wpt_key` and `wpt_server` (hint ${EC2InstancepublicIP})
 * run the manifest `sudo puppet apply webPageTest.pp`
 * End:  profit?
