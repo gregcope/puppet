@@ -1,104 +1,69 @@
 # set some defaults before we go...
-$mysqlPassword = foo
-$apache2_sites = '/etc/apache2/sites'
-$apache2_mods = '/etc/apache2/mods'
+$mysqlPassword = ''
 
-class apache2 {
+# ensure apache installed/started
+service { 'apache2':
+    ensure => running,
+    hasstatus => true,
+    hasrestart => true,
+    require => Package['apache2'],
+}
 
-   # Define an apache2 site. Place all site configs into
-   # /etc/apache2/sites-available and en-/disable them with this type.
-   #
-   # You can add a custom require (string) if the site depends on packages
-   # that aren't part of the default apache2 package. Because of the
-   # package dependencies, apache2 will automagically be included.
-   define site ( $ensure = 'present' ) {
-      case $ensure {
-         'present' : {
-            exec { "/usr/sbin/a2ensite $name":
-               unless => "/bin/readlink -e ${apache2_sites}-enabled/$name",
-               notify => Exec['reload-apache2'],
-               require => Package[$require],
-            }
-         }
-         'absent' : {
-            exec { "/usr/sbin/a2dissite $name":
-               onlyif => "/bin/readlink -e ${apache2_sites}-enabled/$name",
-               notify => Exec['reload-apache2'],
-               require => Package['apache2'],
-            }
-         }
-         default: { err ( "Unknown ensure value: '$ensure'" ) }
-      }
-   }
+# enable expires if note enabled
+exec { 'apacheExpires':
+    logoutput => true,
+    command => '/usr/sbin/a2enmod expires',
+    unless => "/bin/readlink -e /etc/apache2/mods-enabled/expires.load",
+    require => Package[ 'apache2' ],
+    notify => Exec['restart-apache2']
+}
 
-   # Define an apache2 module. Debian packages place the module config
-   # into /etc/apache2/mods-available.
-   #
-   # You can add a custom require (string) if the module depends on
-   # packages that aren't part of the default apache2 package. Because of
-   # the package dependencies, apache2 will automagically be included.
-   define module ( $ensure = 'present', $require = 'apache2' ) {
-      case $ensure {
-         'present' : {
-            exec { "/usr/sbin/a2enmod $name":
-               unless => "/bin/readlink -e ${apache2_mods}-enabled/${name}.load",
-               notify => Exec['force-reload-apache2'],
-               require => Package[$require],
-            }
-         }
-         'absent': {
-            exec { "/usr/sbin/a2dismod $name":
-               onlyif => "/bin/readlink -e ${apache2_mods}-enabled/${name}.load",
-               notify => Exec['force-reload-apache2'],
-               require => Package['apache2'],
-            }
-         }
-         default: { err ( "Unknown ensure value: '$ensure'" ) }
-      }
-   }
+# enable headers if not enabled
+exec { 'apacheHeaders':
+    logoutput => true,
+    command => '/usr/sbin/a2enmod headers',
+    unless => '/bin/readlink -e /etc/apache2/mods-enabled/headers.load',
+    require => Package[ 'apache2' ],
+    notify => Exec['restart-apache2']
+}   
 
-   # Notify this when apache needs a reload. This is only needed when
-   # sites are added or removed, since a full restart then would be
-   # a waste of time. When the module-config changes, a force-reload is
-   # needed.
-   exec { 'reload-apache2':
-      command => '/etc/init.d/apache2 reload',
-      refreshonly => true,
-   }
+# enable deflate if not enabled
+exec { 'apacheDeflate':
+    logoutput => true,
+    command => '/usr/sbin/a2enmod deflate',
+    unless => "/bin/readlink -e /etc/apache2/mods-enabled/deflate.load",
+    require => Package[ 'apache2' ],
+    notify => Exec['restart-apache2']
+}   
 
-   exec { 'force-reload-apache2':
-      command => '/etc/init.d/apache2 force-reload',
-      refreshonly => true,
-   }
+# enabled rewrite if note enabled
+exec { 'apacheRewrite':
+    logoutput => true,
+    command => '/usr/sbin/a2enmod rewrite',
+    unless => "/bin/readlink -e /etc/apache2/mods-enabled/rewrite.load",
+    require => Package[ 'apache2' ],
+    notify => Exec['restart-apache2']
+}   
 
-   # We want to make sure that Apache2 is running.
-   service { 'apache2':
-      ensure => running,
-      hasstatus => true,
-      hasrestart => true,
-      require => Package['apache2'],
-   }
+# enabled ssl if not enabled
+exec { 'apacheSsl':
+   logoutput => true,
+   command => '/usr/sbin/a2enmod ssl',
+   unless => "/bin/readlink -e /etc/apache2/mods-enabled/ssl.load",
+   require => Package[ 'apache2' ],
+   notify => Exec['restart-apache2']
+}   
+
+# enabled default ssl site
+exec { 'enableDefaultSsl':
+    logoutput => true,
+    command => '/usr/sbin/a2ensite default-ssl',
+    unless => '/bin/readlink -e /etc/apache2/sites-enabled/default-ssl',
+    notify => Exec['restart-apache2'],
+    require => Package[ 'apache2' ],
 }
 
 # Ensure that expires, headers and deflate are on!
-class apache inherits apache2 {
-    apache2::module { 'expires':
-        ensure => present
-    }
-    apache2::module { 'headers':
-        ensure => present
-    }
-    apache2::module { 'deflate':
-        ensure => present
-    }
-    apache2::module { 'ssl':
-        ensure => present
-    }
-    apache2::site { 'default-ssl':
-        ensure => present
-    }
-}
-
 # stop puppet running on this host
 service { 'puppet':
     ensure => stopped,
@@ -356,6 +321,8 @@ mount { '/var/lib/mythtv/pictures':
 #Exec[ 'apt-dist-updgrade' ] -> Package <| |>
 
 # install some packages :-)
+package { 'apache2': }
+package { 'zip': }
 package { 'vim': ensure => 'installed'}
 package { 'sysstat': }
 package { 'iotop': }
@@ -401,6 +368,8 @@ file { '/etc/apache2/mythweb-auth':
     ensure => present,
     content => "<Location /mythweb>\n\tAuthType Basic\n\tAuthName mythweb\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.0.0/24\n</Location>",
     mode => '0644',
+    notify => Exec['restart-apache2'],
+    require => Package [ 'apache2' ],
 }
 
 # create a htpasswrod file for mythweb
@@ -427,8 +396,10 @@ file { '/var/www/index.html':
 # set a good expires config
 file { '/etc/apache2/mods-available/expires.conf':
     ensure => present,
-    content => "<IfModule mod_expires.c>\n\tExpiresActive OnExpiresByType application/x-javascript \"access plus 1 year\"\n\tExpiresByType application/javascript \"access plus 1 year\"\n\tExpiresByType text/css \"access plus 1 year\"\n\tExpiresByType image/* \"access plus 1 year\"\n</IfModule>",
+    content => "<IfModule mod_expires.c>\n\tExpiresActive On\n\tExpiresByType application/x-javascript \"access plus 1 year\"\n\tExpiresByType application/javascript \"access plus 1 year\"\n\tExpiresByType text/css \"access plus 1 year\"\n\tExpiresByType image/* \"access plus 1 year\"\n</IfModule>",
     mode => '0644',
+    require => Exec [ 'apacheExpires' ],
+    notify => Exec[ 'restart-apache2' ],
 }
 
 # set a good deflate config
@@ -436,6 +407,8 @@ file { '/etc/apache2/mods-enabled/deflate.conf':
     ensure => present,
     content => "IfModule mod_deflate.c>\n\n\t# stuff to deflate\n\tAddOutputFilterByType DEFLATE text/plain text/html text/xml text/css\n\tAddOutputFilterByType DEFLATE application/xml application/xhtml+xml\n\tAddOutputFilterByType DEFLATE application/rss+xml application/atom+xml\n\tAddOutputFilterByType DEFLATE application/javascript text/javascript application/x-javascript\n\n\t#DeflateCompressionLevel 9\n\n\t# work arounds for older browsers\n\tBrowserMatch ^Mozilla/4 gzip-only-text/html\n\tBrowserMatch ^Mozilla/4\\.0[678] no-gzip\n\tBrowserMatch \\bMSI[E] !no-gzip !gzip-only-text/html\n\tBrowserMatch \\bMSIE\s6.0 gzip-only-text/html\n\n\t# Make sure proxies don't deliver the wrong content\n\tHeader append Vary User-Agent env=!dont-vary\n\n\t# logging for testing only\n\tDeflateFilterNote Input instream\n\tDeflateFilterNote Output outstream\n\tDeflateFilterNote Ratio ratio\n\t# logs out size / insize % of orig size\n\tLogFormat '\"%r\" %{outstream}n/%{instream}n (%{ratio}n%%)' deflate\n\tCustomLog /var/log/apache2/deflate_log deflate\n</IfModule>",
     mode => '0644',
+    require => Exec [ 'apacheDeflate' ],
+    notify => Exec['restart-apache2'],
 }
 
 # remove etags
@@ -443,6 +416,8 @@ file { '/etc/apache2/conf.d/etags.conf':
     ensure => present,
     content => 'FileETag none',
     mode => '0644',
+    notify => Exec['restart-apache2'],
+    require => Package [ 'apache2' ],
 }
 
 # configure logwatch
@@ -594,6 +569,7 @@ exec { 'wgetinstallpageSpeedDeb':
     unless => '/usr/bin/dpkg --get-selections | grep mod-pagespeed-stable',
     logoutput => true,
     user => root,
+    require => Package [ 'apache2' ],
     notify => Exec['restart-apache2'],
 }
 
@@ -602,7 +578,8 @@ exec { 'ModPagespeedEnableFilters_add_instrumentation':
     logoutput => true,
     unless => '/bin/grep "    ModPagespeedEnableFilters add_instrumentation" /etc/apache2/mods-available/pagespeed.conf',
     command => '/usr/bin/perl -p -i -e \'s/    # ModPagespeedEnableFilters add_instrumentation/    ModPagespeedEnableFilters add_instrumentation/\' /etc/apache2/mods-available/pagespeed.conf',
-    notify => Exec['restart-apache2'],
+    notify => Exec[ 'restart-apache2' ],
+    require => Exec [ 'wgetinstallpageSpeedDeb' ],
 }
 
 # enable ModPagespeed ReportUnloadTime
@@ -611,6 +588,7 @@ exec { 'ModPagespeedReportUnloadTime_on':
     unless => '/bin/grep "    ModPagespeedReportUnloadTime on" /etc/apache2/mods-available/pagespeed.conf',
     command => '/usr/bin/perl -p -i -e \'s/    # ModPagespeedReportUnloadTime on/    ModPagespeedReportUnloadTime on/\' /etc/apache2/mods-available/pagespeed.conf',
     notify => Exec['restart-apache2'],
+    require => Exec [ 'wgetinstallpageSpeedDeb' ],
 }
 
 # Allow access form LAN
@@ -619,6 +597,7 @@ exec { 'AllowFromLAN':
     unless => '/bin/grep "        Allow from 192.168.0.0/24" /etc/apache2/mods-available/pagespeed.conf',
     command => '/usr/bin/perl -p -i -e \'s/        Allow from 127.0.0.1/        Allow from 192.168.0.0\/24/g\' /etc/apache2/mods-available/pagespeed.conf',
     notify => Exec['restart-apache2'],
+    require => Exec [ 'wgetinstallpageSpeedDeb' ],
 }
 
 # correct the pagespeed cache dir perms to avoid
@@ -628,6 +607,7 @@ file { '/var/cache/mod_pagespeed':
     owner => 'www-data',
     group => 'www-data',
     mode => '0750',
+    require => Exec [ 'wgetinstallpageSpeedDeb' ],
 }
 
 # install spdy deb unless it is not installed
@@ -640,6 +620,7 @@ exec { 'wgetinstallispdy':
     logoutput => true,
     user => root,
     notify => Exec['restart-apache2'],
+    require => Package [ 'apache2' ],
 }
 
 # restart apache if called
