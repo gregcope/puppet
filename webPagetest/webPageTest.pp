@@ -367,10 +367,20 @@ exec { 'unzipinstallwebpagetest':
     logoutput => true,
     cwd => '/tmp',
     user => 'root',
-    command => "/usr/bin/unzip /tmp/webpagetest_$webpagetestVersion.zip && /bin/mv /tmp/www /var/www/webpagetest/",
+    command => "/usr/bin/unzip /tmp/webpagetest_$webpagetestVersion.zip && /bin/mv /tmp/www/* /var/www/webpagetest/",
+    # I know not perfect!
+    unless => '/bin/ls -la /var/www/webpagespeed/index.php',
+    require => [ Package ['zip' ], Exec [ 'wgetwebpagetest' ], File [ '/var/www/webpagetest' ] ],
+}
+
+exec { 'moveHtaccessToo':
+    logoutput => true,
+    cwd => '/tmp',
+    user => 'root',
+    command => "/bin/mv /tmp/www/.htaccess /var/www/webpagetest/",
     # I know not perfect!
     unless => '/bin/ls -la /var/www/webpagespeed/.htaccess',
-    require => [ Package ['zip' ], Exec [ 'wgetwebpagetest' ], File [ '/var/www/webpagetest' ] ],
+    require => Exec [ 'unzipinstallwebpagetest' ],
 }
 
 # set the location of the wpt server IP
