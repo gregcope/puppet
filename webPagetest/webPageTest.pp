@@ -328,7 +328,7 @@ file { '/var/www/webpagetest':
     owner => 'root',
     group => 'root',
     mode => '0755',
-    require => [ Package [ 'apache2' ], Exec [ 'unzipinstallwebpagetest' ] ],
+    require => Package [ 'apache2' ],
 }
 
 # Ensure Apache user can write to the relevant dirs
@@ -370,7 +370,7 @@ exec { 'unzipinstallwebpagetest':
     command => "/usr/bin/unzip /tmp/webpagetest_$webpagetestVersion.zip && /bin/mv /bin/mv /tmp/www /var/www/webpagespeed/",
     # I know not perfect!
     unless => '/bin/ls -la /var/www/webpagespeed/.htaccess',
-    require => [ Package ['zip' ], Exec [ 'wgetwebpagetest' ] ],
+    require => [ Package ['zip' ], Exec [ 'wgetwebpagetest' ], File [ '/var/www/webpagetest' ] ],
 }
 
 # set the location of the wpt server IP
