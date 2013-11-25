@@ -100,6 +100,7 @@ class apache inherits apache2 {
         ensure => present
     }
     apache2::module { 'rewrite':
+    # might need to check this with sudo apache2ctl -M | grep rewrite
         ensure => present
     }
     apache2::site { 'default-ssl':
