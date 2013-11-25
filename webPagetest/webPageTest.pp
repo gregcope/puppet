@@ -369,7 +369,7 @@ exec { 'unzipinstallwebpagetest':
     user => 'root',
     command => "/usr/bin/unzip /tmp/webpagetest_$webpagetestVersion.zip && /bin/mv /tmp/www/* /var/www/webpagetest/",
     # I know not perfect!
-    unless => '/bin/ls -la /var/www/webpagespeed/index.php',
+    unless => '/bin/ls -la /var/www/webpagetest/index.php',
     require => [ Package ['zip' ], Exec [ 'wgetwebpagetest' ], File [ '/var/www/webpagetest' ] ],
 }
 
