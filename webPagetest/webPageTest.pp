@@ -4,108 +4,66 @@ $webpagetestzipmd5sum = '1997e1ad5e70d9dd2276ae9d6cbc75de'
 $wpt_key = '61c74f0abc0cc3c018963bf72191aff6'
 $wpt_server = '54.194.28.77'
 
-# should not need to change anything below this line
-$apache2_sites = '/etc/apache2/sites'
-$apache2_mods = '/etc/apache2/mods'
-
-class apache2 {
-
-   # Define an apache2 site. Place all site configs into
-   # /etc/apache2/sites-available and en-/disable them with this type.
-   #
-   # You can add a custom require (string) if the site depends on packages
-   # that aren't part of the default apache2 package. Because of the
-   # package dependencies, apache2 will automagically be included.
-   define site ( $ensure = 'present' ) {
-      case $ensure {
-         'present' : {
-            exec { "/usr/sbin/a2ensite $name":
-               unless => "/bin/readlink -e ${apache2_sites}-enabled/$name",
-               notify => Exec['reload-apache2'],
-               require => Package[$require],
-            }
-         }
-         'absent' : {
-            exec { "/usr/sbin/a2dissite $name":
-               onlyif => "/bin/readlink -e ${apache2_sites}-enabled/$name",
-               notify => Exec['reload-apache2'],
-               require => Package['apache2'],
-            }
-         }
-         default: { err ( "Unknown ensure value: '$ensure'" ) }
-      }
-   }
-
-   # Define an apache2 module. Debian packages place the module config
-   # into /etc/apache2/mods-available.
-   #
-   # You can add a custom require (string) if the module depends on
-   # packages that aren't part of the default apache2 package. Because of
-   # the package dependencies, apache2 will automagically be included.
-   define module ( $ensure = 'present', $require = 'apache2' ) {
-      case $ensure {
-         'present' : {
-            exec { "/usr/sbin/a2enmod $name":
-               unless => "/bin/readlink -e ${apache2_mods}-enabled/${name}.load",
-               notify => Exec['force-reload-apache2'],
-               require => Package[$require],
-            }
-         }
-         'absent': {
-            exec { "/usr/sbin/a2dismod $name":
-               onlyif => "/bin/readlink -e ${apache2_mods}-enabled/${name}.load",
-               notify => Exec['force-reload-apache2'],
-               require => Package['apache2'],
-            }
-         }
-         default: { err ( "Unknown ensure value: '$ensure'" ) }
-      }
-   }
-
-   # Notify this when apache needs a reload. This is only needed when
-   # sites are added or removed, since a full restart then would be
-   # a waste of time. When the module-config changes, a force-reload is
-   # needed.
-   exec { 'reload-apache2':
-      command => '/etc/init.d/apache2 reload',
-      refreshonly => true,
-   }
-
-   exec { 'force-reload-apache2':
-      command => '/etc/init.d/apache2 force-reload',
-      refreshonly => true,
-   }
-
-   # We want to make sure that Apache2 is running.
-   service { 'apache2':
-      ensure => running,
-      hasstatus => true,
-      hasrestart => true,
-      require => Package['apache2'],
-   }
+# ensure apache installed/started
+service { 'apache2':
+    ensure => running,
+    hasstatus => true,
+    hasrestart => true,
+    require => Package['apache2'],
 }
 
-# Ensure that expires, headers, deflate, ssl, rewrite are on!
-class apache inherits apache2 {
-    apache2::module { 'expires':
-        ensure => present
-    }
-    apache2::module { 'headers':
-        ensure => present
-    }
-    apache2::module { 'deflate':
-        ensure => present
-    }
-    apache2::module { 'ssl':
-        ensure => present
-    }
-    apache2::module { 'rewrite':
-    # might need to check this with sudo apache2ctl -M | grep rewrite
-        ensure => present
-    }
-    apache2::site { 'default-ssl':
-        ensure => present
-    }
+# enable expires if note enabled
+exec { 'apacheExpires':
+    logoutput => true,
+    command => '/usr/sbin/a2enmod expires',
+    unless => "/bin/readlink -e /etc/apache2/mods-enabled/expires.load",
+    require => Package[ 'apache2' ],
+    notify => Exec['restart-apache2']
+}
+
+# enable headers if not enabled
+exec { 'apacheHeaders':
+    logoutput => true,
+    command => '/usr/sbin/a2enmod headers',
+    unless => '/bin/readlink -e /etc/apache2/mods-enabled/headers.load',
+    require => Package[ 'apache2' ],
+    notify => Exec['restart-apache2']
+}   
+
+# enable deflate if not enabled
+exec { 'apacheDeflate':
+    logoutput => true,
+    command => '/usr/sbin/a2enmod deflate',
+    unless => "/bin/readlink -e /etc/apache2/mods-enabled/deflate.load",
+    require => Package[ 'apache2' ],
+    notify => Exec['restart-apache2']
+}   
+
+# enabled rewrite if note enabled
+exec { 'apacheRewrite':
+    logoutput => true,
+    command => '/usr/sbin/a2enmod rewrite',
+    unless => "/bin/readlink -e /etc/apache2/mods-enabled/rewrite.load",
+    require => Package[ 'apache2' ],
+    notify => Exec['restart-apache2']
+}   
+
+# enabled ssl if not enabled
+exec { 'apacheSsl':
+   logoutput => true,
+   command => '/usr/sbin/a2enmod ssl',
+   unless => "/bin/readlink -e /etc/apache2/mods-enabled/ssl.load",
+   require => Package[ 'apache2' ],
+   notify => Exec['restart-apache2']
+}   
+
+# enabled default ssl site
+exec { 'enableDefaultSsl':
+    logoutput => true,
+    command => '/usr/sbin/a2ensite default-ssl',
+    unless => '/bin/readlink -e /etc/apache2/sites-enabled/default-ssl',
+    notify => Exec['restart-apache2'],
+    require => Package[ 'apache2' ],
 }
 
 # add a mail alias file
