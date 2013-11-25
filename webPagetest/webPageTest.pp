@@ -367,7 +367,7 @@ exec { 'unzipinstallwebpagetest':
     logoutput => true,
     cwd => '/tmp',
     user => 'root',
-    command => "/usr/bin/unzip /tmp/webpagetest_$webpagetestVersion.zip && /bin/mv /bin/mv /tmp/www /var/www/webpagetest/",
+    command => "/usr/bin/unzip /tmp/webpagetest_$webpagetestVersion.zip && /bin/mv /tmp/www /var/www/webpagetest/",
     # I know not perfect!
     unless => '/bin/ls -la /var/www/webpagespeed/.htaccess',
     require => [ Package ['zip' ], Exec [ 'wgetwebpagetest' ], File [ '/var/www/webpagetest' ] ],
