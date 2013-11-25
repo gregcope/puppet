@@ -379,7 +379,7 @@ exec { 'moveHtaccessToo':
     user => 'root',
     command => "/bin/mv /tmp/www/.htaccess /var/www/webpagetest/",
     # I know not perfect!
-    unless => '/bin/ls -la /var/www/webpagespeed/.htaccess',
+    unless => '/bin/ls -la /var/www/webpagetest/.htaccess',
     require => Exec [ 'unzipinstallwebpagetest' ],
 }
 
