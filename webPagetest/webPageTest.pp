@@ -2,7 +2,7 @@
 $webpagetestVersion = '2.13'
 $webpagetestzipmd5sum = '1997e1ad5e70d9dd2276ae9d6cbc75de'
 $wpt_key = '61c74f0abc0cc3c018963bf72191aff6'
-$wpt_server = '54.194.0.124'
+$wpt_server = '54.194.28.77'
 
 # should not need to change anything below this line
 $apache2_sites = '/etc/apache2/sites'
@@ -283,7 +283,7 @@ file { '/etc/logrotate.d/compress':
 # remount / with noatime,nodiratime opts
 mount { '/':
     ensure => present,
-    device => 'cloudimg-rootfs',
+    device => 'LABEL=cloudimg-rootfs',
     atboot => yes,
     fstype => ext4,
     dump => 0,
@@ -410,15 +410,15 @@ exec { 'renameLocationsIniEC2Sample':
     command => '/bin/mv /var/www/webpagetest/settings/locations.ini.EC2-sample /var/www/webpagetest/settings/locations.ini',
     unless => '/bin/ls -la /var/www/webpagetest/settings/locations.ini',
     require => Exec [ 'unzipinstallwebpagetest' ],
-    notify => [ Exec [ 'setwptkey' ], Exec [ 'setwptServeIP' ] ],
+    notify => [ Exec [ 'setwptkey' ], Exec [ 'setwptServeIP' ], Exec [ 'setKeyinLocations.ini' ] ],
 }
 
 # set another secrete key
 exec { 'setKeyinLocations.ini':
     logoutput => true,
-    command => "/usr/bin/perl -p -i -e \"s/key=SecretKey/key=$wpt_key/g\" /var/www/webpagetest/settings/locations.ini"    ,
-    unless => "/bin/grep \"key=$wpt_key\" /var/www/webpagetest/settings/locations.ini",
-    require => Exec [ 'setwptkey' ],
+    command => "/usr/bin/perl -p -i -e \"s/^key=SecretKey/key=$wpt_key/g\" /var/www/webpagetest/settings/locations.ini"    ,
+    unless => "/bin/grep \"^key=$wpt_key\" /var/www/webpagetest/settings/locations.ini",
+    require => Exec [ 'unzipinstallwebpagetest' ],
 }
 
 # rename the ec2.ini.sample
