@@ -1,0 +1,57 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Test for Greg",
+  "Mappings" : {
+    "AWSRegionArch2AMI" : {
+      "us-east-1"      : { "IE7" : "ami-fe689397", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_East_IE7" },
+      "us-east-1"      : { "IE8" : "ami-406f9429", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_East_IE8" },
+      "us-east-1"      : { "IE9ChromeFirefoxSafari" : "ami-c262d9ab", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_East" },
+      "us-west-1"      : { "IE7" : "ami-919dcfd4", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_West_IE7" },
+      "us-west-1"      : { "IE8" : "ami-5982d01c", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_West_IE8" },
+      "us-west-1"      : { "IE9ChromeFirefoxSafari" : "ami-d53d1b90", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_West" },
+      "us-west-2"      : { "IE7" : "ami-68a42958", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_West2_IE7" },
+      "us-west-2"      : { "IE8" : "ami-2ca4291c", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_West2_IE8" },
+      "us-west-2"      : { "IE9ChromeFirefoxSafari" : "ami-867af7b6", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_West2" },
+      "eu-west-1"      : { "IE7" : "ami-70b18004", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=EU_WEST_IE7"},
+      "eu-west-1"      : { "IE8" : "ami-00b18074", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=EU_WEST_IE8" },
+      "eu-west-1"      : { "IE9ChromeFirefoxSafari" : "ami-8b2c2fff", "UserData" :  "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=EU_WEST" },
+      "ap-southeast-1" : { "IE7" : "ami-38bac26a", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Singapore_IE7" },
+      "ap-southeast-1" : { "IE8" : "ami-92bac2c0", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Singapore_IE8" },
+      "ap-southeast-1" : { "IE9ChromeFirefoxSafari" : "ami-7c14572e", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Singapore" },
+      "ap-southeast-2" : { "IE7" : "ami-2b40d711", "UserData" : "" },
+      "ap-southeast-2" : { "IE8" : "ami-2940d713" },
+      "ap-southeast-2" : { "IE9ChromeFirefoxSafari" : "ami-6cb82956" },
+      "ap-northeast-1" : { "IE7" : "ami-ba16bcbb", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Tokyo_IE7" },
+      "ap-northeast-1" : { "IE8" : "ami-bc16bcbd", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Tokyo_IE8" },
+      "ap-northeast-1" : { "IE9ChromeFirefoxSafari" : "ami-b465dbb5", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Tokyo" },
+      "sa-east-1"      : { "IE7" : "ami-622ff07f", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=SA_East_IE7" },
+      "sa-east-1"      : { "IE8" : "ami-9c2ff081", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=SA_East_IE8" },
+      "sa-east-1"      : { "IE9ChromeFirefoxSafari" : "ami-1c4a9301", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=SA_East" }
+    }
+  },
+  "Resources" : {
+     "WebPageTestInstance" : {
+       "Type" : "AWS::EC2::Instance",
+       "Properties" : {
+         "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "IE9ChromeFirefoxSafari" ]},
+	 "InstanceType" : "m1.medium",
+	 "UserData" : { 
+	   "Fn::Base64" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "UserData" ] } },
+	 "SecurityGroups" : [{ "Ref" : "defaultNone" }],
+	 "Tags" : [
+	   { "Key" : "Name", "Value" : "webPageSpeedTestInstance" },
+	   { "Key" : "env", "Value" : "dev" },
+	   { "Key" : "product", "Value" : "Web Page Test" },
+	   { "Key" : "ipcode", "Value" : "110" },
+	   { "Key" : "role", "Value" : "Web Page Test Windows instance" }
+	 ]
+       }
+     },
+     "defaultNone" : {
+       "Type" : "AWS::EC2::SecurityGroup",
+       "Properties" : {
+         "GroupDescription" : "Default none"
+       }
+     }
+  }
+}
