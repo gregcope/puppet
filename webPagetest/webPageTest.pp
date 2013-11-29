@@ -66,49 +66,6 @@ exec { 'enableDefaultSsl':
     require => Package[ 'apache2' ],
 }
 
-# add a mail alias file
-# require the root, postmaster and logcheck aliases
-file { '/etc/aliases':
-    ensure => present,
-    mode => '0644',
-    owner => 'root',
-    group => 'root',
-    alias => 'aliases',
-    require => Mailalias [ 'root', 'postmaster', 'logcheck' ];
-}
-
-# run the newaliases command if any of the subscribed mail aliases have been added
-exec { 'newaliases':
-    logoutput => true,
-    command => '/usr/bin/newaliases',
-    refreshonly => true,
-    subscribe => [ Mailalias ['root'], Mailalias ['postmaster'], Mailalias ['logcheck'], Mailalias['greg'] ];
-}
-
-# mail alias to gregcope@gmail.com
-mailalias { 'greg':
-    name => 'greg',
-    recipient => 'gregcope@gmail.com',
-}
-
-# alias root to gregcope@gmail.com
-mailalias { 'root':
-    name => 'root',
-    recipient => 'gregcope@gmail.com',
-}
-
-# alias postmaster to gregcope@gmail.com
-mailalias { 'postmaster':
-    name => 'postmaster',
-    recipient => 'root',
-}
-
-# alais logcheck to root
-mailalias { 'logcheck':
-    name => 'logcheck',
-    recipient => 'root',
-}
-
 #Exec[ 'apt-dist-updgrade' ] -> Package <| |>
 
 # install some packages :-)
@@ -149,22 +106,6 @@ package { 'network-manager': ensure => 'absent' }
 package { 'isc-dhcp-client': ensure => 'absent' }
 package { 'isc-dhcp-common': ensure => 'absent' }
 
-# setup basic auth for mythweb from non-lan IPs
-file { '/etc/apache2/mythweb-auth':
-    ensure => present,
-    content => "<Location /mythweb>\n\tAuthType Basic\n\tAuthName mythweb\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.0.0/24\n</Location>",
-    mode => '0644',
-    require => Package [ 'apache2' ],
-}
-
-# create a htpasswrod file for mythweb
-file { '/etc/apache2/web-htpassword':
-    ensure => present,
-    content => 'greg:Q4Z1zApK61s8I',
-    mode => '0644',
-    require => Package [ 'apache2' ]
-}
-
 # set a good expires config
 file { '/etc/apache2/mods-available/expires.conf':
     ensure => present,
@@ -188,25 +129,6 @@ file { '/etc/apache2/conf.d/etags.conf':
     mode => '0644',
     require => Package [ 'apache2' ]
 
-}
-
-# configure logwatch
-# require the package
-file { '/etc/logwatch/conf/logwatch.conf':
-    ensure => present,
-    owner => 'root',
-    group => 'root',
-    mode => '0644',
-    content => "LogDir = /var/log\nTmpDir = /var/cache/logwatch\nOutput = stdout\nFormat = text\nEncode = none\nMailTo = root\nMailFrom = Logwatch\nRange = yesterday\nDetail = High\nService = All\nmailer = \"/usr/sbin/sendmail -t\"",
-    require => Package['logwatch'],
-}
-
-# some reason this is/was missing :-(
-file { '/var/cache/logwatch':
-    ensure => 'directory',
-    owner => 'root',
-    group => 'root',
-    mode => '0755',
 }
 
 # remove all the unused tty's
@@ -441,5 +363,3 @@ exec { 'renamefeedsIncSample':
     unless => '/bin/ls -la /var/www/webpagetest/settings/feeds.inc',
     require => Exec [ 'unzipinstallwebpagetest' ],
 }
-
-
