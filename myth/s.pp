@@ -1,5 +1,5 @@
 # set some defaults before we go...
-$mysqlPassword = '!!m21cat'
+$mysqlPassword = ''
 
 # ensure apache installed/started
 service { 'apache2':
