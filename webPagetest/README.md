@@ -14,7 +14,7 @@ Notes;
 * Send bug reports, money, gifts to <gregcope@gmail.com>, complaints to /dev/null, if it breaks you get to keep all the bits
 * Njoy!
 
-To get an EC Server instance up and running;
+To get an EC Server instance up and running;  
 1. lauch it (12.04 TLS)!  
 2. login (hint `ssh -i YOUR KEY.pm ubunut@${EC2InstancepublicIP}`)  
 3. run an update `sudo apt-get update`  
@@ -25,7 +25,7 @@ To get an EC Server instance up and running;
 8. run the manifest `sudo puppet apply webPageTest.pp`  
 9. End:  profit?  
 
-To get an EC Test instance up and running;
+To get an EC Test instance up and running;  
 1. Login, Choose a region  
 2. Goto Cloud formation and create a stack - give it a nice name like "WebPageTest"  
 3. Chose the upload template option and upload webpageAutoScalingPolicy.json  
