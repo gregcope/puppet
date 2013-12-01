@@ -15,20 +15,21 @@ Notes;
 * Njoy!
 
 To get an EC Server instance up and running;
-* lauch it (12.04 TLS)!
-* login (hint `ssh -i YOUR KEY.pm ubunut@${EC2InstancepublicIP}`)
-* run an update `sudo apt-get update`
-* run an upgrade `sudo apt-get -y upgrade`
-* install puppet  `sudo apt-get -y install puppet`
-* get the manifest `wget https://raw.github.com/gregcope/puppet/master/webPagetest/webPageTest.pp`
-* Change the `wpt_key` and `wpt_server` (hint ${EC2InstancepublicIP})
-* run the manifest `sudo puppet apply webPageTest.pp`
-* End:  profit?
+1. lauch it (12.04 TLS)!
+2. login (hint `ssh -i YOUR KEY.pm ubunut@${EC2InstancepublicIP}`)
+3. run an update `sudo apt-get update`
+4. run an upgrade `sudo apt-get -y upgrade`
+5. install puppet  `sudo apt-get -y install puppet`
+6. get the manifest `wget https://raw.github.com/gregcope/puppet/master/webPagetest/webPageTest.pp`
+7. Change the `wpt_key` and `wpt_server` (hint ${EC2InstancepublicIP})
+8. run the manifest `sudo puppet apply webPageTest.pp`
+9. End:  profit?
 
 To get an EC Test instance up and running;
-# Login, Choose a region
-# Goto Cloud formation and create a stack - give it a nice name like "WebPageTest"
-# Chose the upload template option and upload webpageAutoScalingPolicy.json
-# Click, Click until you hit "Launch" and click that
-# Wait about 5 mins and you should see the relevant option appear in the WPT server location feilds
-# If it does not work check the WPT log file tail -f /var/log/apache2/other_vhosts_access.log | grep ${LOCATION}
+1. Login, Choose a region
+2. Goto Cloud formation and create a stack - give it a nice name like "WebPageTest"
+3. Chose the upload template option and upload webpageAutoScalingPolicy.json
+4. Click, Click until you hit "Launch" and click that
+5. Wait about 5 mins and you should see the relevant option appear in the WPT server location feilds
+6. If it does not work check the WPT log file tail -f /var/log/apache2/other_vhosts_access.log | grep ${LOCATION}
+7. Send the new location lots of tests - you should see new instances spawn and take load (check the HTTP log file) and then be terminated after 10 minutes of low CPU
