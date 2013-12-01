@@ -1,5 +1,5 @@
 # set some defaults before we go...
-$mysqlPassword = ''
+$mysqlPassword = '!!m21cat'
 
 # ensure apache installed/started
 service { 'apache2':
@@ -689,7 +689,7 @@ file { '/home/greg/.bash_aliases':
     owner => 'greg',
     group => 'greg',
     mode => '0644',
-    content => 'alias update="sudo apt-get update && sudo apt-get upgrade; s    ync;sync;sync"',
+    content => 'alias update="sudo apt-get update && sudo apt-get upgrade; sync;sync;sync"',
 }
 
 # set the time, first install a package

@@ -1,5 +1,5 @@
 # set some defaults before we go...
-$mysqlPassword = foo
+$mysqlPassword = '!!m21cat'
 
 # lets make sure we have 0.27 installed
 package { 'libmyth-0.27-0':
@@ -26,12 +26,12 @@ file { '/etc/mysql/conf.d/mythtv-tweaks.cnf':
 }
 
 # tweak X
-file { '/home/myth/.xinitrc':
+file { '/home/myth/.xprofile':
     ensure => present,
-    mode => '0644',
+    mode => '0755',
     owner => myth,
     group => myth,
-    content => "{\nxset s off\nxset -dpms\n}",
+    content => "#!/bin/sh\nxset s off\nxset -dpms\n",
 }
 
 # install optimise myth cron.daily file
