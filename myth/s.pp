@@ -691,3 +691,21 @@ file { '/home/greg/.bash_aliases':
     mode => '0644',
     content => 'alias update="sudo apt-get update && sudo apt-get upgrade; s    ync;sync;sync"',
 }
+
+# set the time, first install a package
+package { 'tzdata': }
+
+# set the timezone
+file { '/etc/timezone':
+    content => "Etc/UTC\n"
+}
+
+# update tzdata
+# needs the timezone file to be correct and have the tzpackage
+exec { 'runDpkgReconfigureTzdata':
+    logoutput => true,
+    # ubuntu insanity.....
+    command => '/usr/sbin/dpkg-reconfigure --frontend noninteractive tzdata',
+    require => [ File [ '/etc/timezone' ], Package [ 'tzdata' ] ],
+    unless => '/bin/grep UTC0 /etc/localtime',
+}
