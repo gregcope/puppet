@@ -14,7 +14,7 @@ Notes;
 * Send bug reports, money, gifts to <gregcope@gmail.com>, complaints to /dev/null, if it breaks you get to keep all the bits
 * Njoy!
 
-To get an EC instance up and running;
+To get an EC Server instance up and running;
 * lauch it (12.04 TLS)!
 * login (hint `ssh -i YOUR KEY.pm ubunut@${EC2InstancepublicIP}`)
 * run an update `sudo apt-get update`
@@ -24,3 +24,11 @@ To get an EC instance up and running;
 * Change the `wpt_key` and `wpt_server` (hint ${EC2InstancepublicIP})
 * run the manifest `sudo puppet apply webPageTest.pp`
 * End:  profit?
+
+To get an EC Test instance up and running;
+# Login, Choose a region
+# Goto Cloud formation and create a stack - give it a nice name like "WebPageTest"
+# Chose the upload template option and upload webpageAutoScalingPolicy.json
+# Click, Click until you hit "Launch" and click that
+# Wait about 5 mins and you should see the relevant option appear in the WPT server location feilds
+# If it does not work check the WPT log file tail -f /var/log/apache2/other_vhosts_access.log | grep ${LOCATION}
