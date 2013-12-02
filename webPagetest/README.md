@@ -27,11 +27,11 @@ To get an EC Server instance up and running;
 
 To get an EC Test instance up and running;  
 1. Login to AWS, Choose a region  
-2. Goto Cloud formation and create a stack - give it a nice name like "WebPageTest"  
-3. Chose the upload template option and upload webpageAutoScalingPolicy.json  
+2. Goto Cloud formation and create a stack - give it a nice stack name like `WebPageTest`  
+3. Chose the upload template option and upload `webpageAutoScalingPolicy.json`  
 4. Click, Click until you hit "Launch" and click that  
 5. Wait about 5 mins and you should see the relevant option appear in the WPT server location fields  
-6a. If it does not work check the WPT log file tail -f /var/log/apache2/other_vhosts_access.log | grep ${LOCATION}
+6a. If it does not work check the WPT log file `tail -f /var/log/apache2/other_vhosts_access.log | grep ${LOCATION}`
 6b. If it is not polling the server (check for its IP), terminate instance, ASG will start another and repeat from no 5. downwards  
 6c. If it is still not working you get to keep all the bits  
 7. Send the new location lots of tests - you should see new instances spawn and take load (check the HTTP log file) and then be terminated after 10 minutes of low CPU  
