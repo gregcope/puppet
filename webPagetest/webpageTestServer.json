@@ -1,0 +1,73 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Sets up a Web Page Test Server instance on Ubuntu 12.04, and then downloads and does a puppet run to install/config instance",
+  "Parameters": {
+    "UserData" : {
+      "Description" : "User data for web page test instances",
+      "Type" : "String", "Default" : "/usr/bin/apt-get -y install puppet; cd /tmp; wget https://raw.github.com/gregcope/puppet/8986    d76d145279a368bb7167dd3c5c9ac46fe110/webPagetest/webPageTest.pp; sudo puppet apply webPageTest.pp" 
+    },
+    "KeyName" : { "Description" : "The EC2 Key Pair to allow SSH access to the instances", "Type" : "String" }
+  },
+
+  "Mappings" : {
+    "AWSRegionArch2AMI" : {
+      "us-east-1"      : { "Ubuntu1204" : "" },
+      "us-west-1"      : { "Ubuntu1204" : "" },
+      "us-west-2"      : { "Ubuntu1204" : "" },
+      "eu-west-1"      : { "Ubuntu1204" : "ami-3e628e49" },
+      "ap-southeast-1" : { "Ubuntu1204" : "" },
+      "ap-southeast-2" : { "Ubuntu1204" : "" },
+      "ap-northeast-1" : { "Ubuntu1204" : "" },
+      "sa-east-1"      : { "Ubuntu1204" : "" }
+    }
+  },
+  "Resources" : {
+     "WebPageTestServerInstance" : {
+       "Type" : "AWS::EC2::Instance",
+       "Properties" : {
+         "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "Ubuntu1204" ]},
+	 "InstanceType" : "t1.micro",
+	 "SecurityGroups" : [{ "Ref" : "SSHHTTPHTTPSInboundFromAnywhere" }],
+	 "UserData" : { "Fn::Base64" : { "Ref" : "UserData" }},
+	 "Tags" : [
+	   { "Key" : "Name", "Value" : "webPageTestServerInstance" },
+	   { "Key" : "env", "Value" : "dev" },
+	   { "Key" : "product", "Value" : "Web Page Test" },
+	   { "Key" : "ipcode", "Value" : "110" },
+	   { "Key" : "role", "Value" : "Web Page Server Ubuntu 12.04 instance" }
+	 ]
+       }
+     },
+     
+     "SSHHTTPHTTPSInboundFromAnywhere" : {
+	"Type" : "AWS::EC2::SecurityGroup",
+	"Properties" : {
+	  "GroupDescription" : "Enable SSH access via port 22",
+	  "SecurityGroupIngress" : [ {
+            "IpProtocol" : "tcp",
+	    "FromPort" : "-1",
+	    "ToPort" : "22",
+	    "CidrIp" : "0.0.0.0/0" },
+	  {
+            "IpProtocol" : "tcp",
+	    "FromPort" : "-1",
+	    "ToPort" : "80",
+	    "CidrIp" : "0.0.0.0/0"
+	  },
+	  {
+	    "IpProtocol" : "tcp",
+	    "FromPort" : "-1",
+	    "ToPort" : "443",
+	    "CidrIp" : "0.0.0.0/0"
+	  }
+	  ]
+	}
+     }
+  },
+  "Outputs" : {
+    "PublicIP" : {
+      "Description" : "The IP of the webpage test server",
+      "Value" : { "Fn::GetAtt" : [ "WebPageTestServerInstance", "PublicIp" ] }
+    }
+  }		    
+}
