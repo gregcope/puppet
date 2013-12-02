@@ -363,3 +363,8 @@ exec { 'renamefeedsIncSample':
     unless => '/bin/ls -la /var/www/webpagetest/settings/feeds.inc',
     require => Exec [ 'unzipinstallwebpagetest' ],
 }
+
+# disable IE7
+# perl -p -i -e 's/(^1=.+_IE7)/;$1/g' locations.ini
+# egrep '^1=.+_IE7' locations.ini
+
