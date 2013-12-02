@@ -6,7 +6,7 @@
       "Description" : "User data for web page test instances",
       "Type" : "String", "Default" : "/usr/bin/apt-get -y install puppet; cd /tmp; wget https://raw.github.com/gregcope/puppet/8986    d76d145279a368bb7167dd3c5c9ac46fe110/webPagetest/webPageTest.pp; sudo puppet apply webPageTest.pp" 
     },
-    "KeyName" : { "Description" : "The EC2 Key Pair to allow SSH access to the instances", "Type" : "String" }
+    "KeyName" : { "Description" : "The EC2 Key Pair to allow SSH access to the instances", "Type" : "String", "Default" : "greg2" }
   },
 
   "Mappings" : {
@@ -42,25 +42,12 @@
      "SSHHTTPHTTPSInboundFromAnywhere" : {
 	"Type" : "AWS::EC2::SecurityGroup",
 	"Properties" : {
-	  "GroupDescription" : "Enable SSH access via port 22",
-	  "SecurityGroupIngress" : [ {
-            "IpProtocol" : "tcp",
-	    "FromPort" : "-1",
-	    "ToPort" : "22",
-	    "CidrIp" : "0.0.0.0/0" },
-	  {
-            "IpProtocol" : "tcp",
-	    "FromPort" : "-1",
-	    "ToPort" : "80",
-	    "CidrIp" : "0.0.0.0/0"
-	  },
-	  {
-	    "IpProtocol" : "tcp",
-	    "FromPort" : "-1",
-	    "ToPort" : "443",
-	    "CidrIp" : "0.0.0.0/0"
-	  }
-	  ]
+	  "GroupDescription" : "Enable SSH, HTTP, HTTPS",
+	  "SecurityGroupIngress" : 
+	    [ { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0" },
+	      { "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0" },
+	      { "IpProtocol" : "tcp", "FromPort" : "443", "ToPort" : "443", "CidrIp" : "0.0.0.0/0" }
+	    ]
 	}
      }
   },

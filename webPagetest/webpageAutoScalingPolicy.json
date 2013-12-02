@@ -2,6 +2,14 @@
   "AWSTemplateFormatVersion" : "2010-09-09",
   "Description" : "Test for Greg",
 
+  "Parameters" : {
+    "OperatorEmail": {
+      "Description": "Email address to notify if there are any scaling operations",
+      "Type": "String",
+      "Default" : "greg.cope@ft.com"
+    }
+  },
+
   "Mappings" : {
     "AWSRegionArch2AMI" : {
       "us-east-1"      : { "IE9ChromeFirefox" : "ami-0f7eae66", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_East" },
@@ -16,6 +24,13 @@
   },
 
   "Resources" : {
+    "WebPageTestScalingNotificationTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "Subscription": [ { "Endpoint": { "Ref": "OperatorEmail" }, "Protocol": "email" } ]
+      }
+    },
+
     "WebPageTestAutoScalingGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : { 
@@ -29,7 +44,11 @@
 	  { "Key" : "product", "Value" : "Web Page Test", "PropagateAtLaunch" : "true" },
 	  { "Key" : "ipcode", "Value" : "110", "PropagateAtLaunch" : "true" },
 	  { "Key" : "role", "Value" : "Web Page Test Windows instance", "PropagateAtLaunch" : "true" }
-	  ]
+	  ],
+	"NotificationConfiguration" : {
+	  "TopicARN" : { "Ref" : "WebPageTestScalingNotificationTopic" },
+	  "NotificationTypes" : [ "autoscaling:EC2_INSTANCE_LAUNCH","autoscaling:EC2_INSTANCE_LAUNCH_ERROR","autoscaling:EC2_INSTANCE_TERMINATE", "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"]
+	}
       }
     },
 
