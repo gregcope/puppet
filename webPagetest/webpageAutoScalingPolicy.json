@@ -9,7 +9,7 @@
       "us-west-2"      : { "IE9ChromeFirefox" : "ami-867af7b6", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_West2" },
       "eu-west-1"      : { "IE9ChromeFirefox" : "ami-33b98747", "UserData" :  "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=EU_WEST" },
       "ap-southeast-1" : { "IE9ChromeFirefox" : "ami-385a1e6a", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Singapore" },
-      "ap-southeast-2" : { "IE9ChromeFirefox" : "ami-6cb82956", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Sidney" },
+      "ap-southeast-2" : { "IE9ChromeFirefox" : "ami-6cb82956", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Sydney" },
       "ap-northeast-1" : { "IE9ChromeFirefox" : "ami-6a5cea6b", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Tokyo" },
       "sa-east-1"      : { "IE9ChromeFirefox" : "ami-cc7fa0d1", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=SA_East" }
     }
