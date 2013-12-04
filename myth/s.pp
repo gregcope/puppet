@@ -1,5 +1,5 @@
 # set some defaults before we go...
-$mysqlPassword = ''
+$mysqlPassword = '!!m21cat'
 
 # ensure apache installed/started
 service { 'apache2':
@@ -471,25 +471,36 @@ file { '/home/myth/.vimrc':
     content => "set nu\nfiletype indent on\nset autoindent"
 }
 
+# update /etc/default/console-setup and reduce ttys to 3!
+exec { 'updateConsoleSetup':
+    logoutput => true,
+    command => '/usr/bin/perl -p -i -e \'s!ACTIVE_CONSOLES="/dev/tty\[1\-6\]"!ACTIVE_CONSOLES="/dev/tty\[1\-2\]"!\' /etc/default/console-setup',
+    unless => '/bin/grep \'ACTIVE_CONSOLES="/dev/tty\[1\-2\]"\' /etc/default/console-setup',
+}
+
 # remove all the unused tty's
 file { '/etc/init/tty3.conf':
     ensure => absent,
+    require => Exec [ 'updateConsoleSetup' ],
 }
 file { '/etc/init/tty4.conf':
     ensure => absent,
+    require => Exec [ 'updateConsoleSetup' ],
 }
 file {'/etc/init/tty5.conf':
     ensure => absent,
+    require => Exec [ 'updateConsoleSetup' ],
 }
 file {'/etc/init/tty6.conf':
     ensure => absent,
+    require => Exec [ 'updateConsoleSetup' ],
 }
 
 # reload init, if anything has changed to those files!
 exec { 'reload-init':
     logoutput => true,
     command => '/sbin/init q',
-   subscribe => [ File['/etc/init/tty3.conf'], File['/etc/init/tty4.conf'], File['/etc/init/tty5.conf'], File['/etc/init/tty6.conf'] ],
+    subscribe => [ File['/etc/init/tty3.conf'], File['/etc/init/tty4.conf'], File['/etc/init/tty5.conf'], File['/etc/init/tty6.conf'], Exec [ 'updateConsoleSetup' ] ],
     refreshonly => true
 }
 
