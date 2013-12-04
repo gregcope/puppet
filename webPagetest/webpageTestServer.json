@@ -2,10 +2,7 @@
   "AWSTemplateFormatVersion" : "2010-09-09",
   "Description" : "Sets up a Web Page Test Server instance on Ubuntu 12.04, and then downloads and does a puppet run to install/config instance",
   "Parameters": {
-    "UserData" : {
-      "Description" : "User data for web page test instances",
-      "Type" : "String", "Default" : "/usr/bin/apt-get -y install puppet; cd /tmp; wget https://raw.github.com/gregcope/puppet/8986    d76d145279a368bb7167dd3c5c9ac46fe110/webPagetest/webPageTest.pp; sudo puppet apply webPageTest.pp" 
-    },
+    "WebPageTestKey" : { "Description" : "The Web Page Test Key for client/server/API comms", "Type" : "String", "Default" : "61c74f0abc0cc3c018963bf72191aff6" },
     "KeyName" : { "Description" : "The EC2 Key Pair to allow SSH access to the instances", "Type" : "String", "Default" : "greg2" }
   },
 
@@ -24,11 +21,21 @@
   "Resources" : {
      "WebPageTestServerInstance" : {
        "Type" : "AWS::EC2::Instance",
-       "Properties" : {
-         "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "Ubuntu1204" ]},
-	 "InstanceType" : "t1.micro",
+       "Properties"       : {
+         "ImageId"        : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "Ubuntu1204" ]},
+	 "InstanceType"   : "t1.micro",
+	 "KeyName"        : { "Ref" : "KeyName" },
 	 "SecurityGroups" : [{ "Ref" : "SSHHTTPHTTPSInboundFromAnywhere" }],
-	 "UserData" : { "Fn::Base64" : { "Ref" : "UserData" }},
+	 "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+	   "#!/bin/bash -v\n",
+	   "/usr/bin/sudo /usr/bin/apt-get update\n",
+	   "/usr/bin/sudo /usr/bin/apt-get -y upgrade\n",
+	   "/usr/bin/sudo /usr/bin/apt-get -y install puppet\n",
+	   "cd /tmp\n",
+	   "touch /tmp/wpt_key_", { "Ref" : "WebPageTestKey" }, "\n",
+	   "/usr/bin/wget https://raw.github.com/gregcope/puppet/master/webPagetest/webPageTest.pp && /usr/bin/sudo /usr/bin/puppet apply webPageTest.pp && touch /tmp/puppetRunOK\n"
+	   ]]}
+	 },
 	 "Tags" : [
 	   { "Key" : "Name", "Value" : "webPageTestServerInstance" },
 	   { "Key" : "env", "Value" : "dev" },
