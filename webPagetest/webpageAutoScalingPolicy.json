@@ -1,21 +1,36 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Creates an IE9/Chrome/Firefox Web Page Test (client) instance in the relevant Region.  This is within an autoscaling group, starts at 1, max 3, scale if CPU goes about 40% for 1 period of 60 secs, and then scale down if CPU is below 20% for 10minutes to stop premature shrinking.  Tags not complete yet",
+  "Description" : "Test for Greg",
+
+  "Parameters" : {
+    "OperatorEmail": {
+      "Description": "Email address to notify if there are any scaling operations",
+      "Type": "String",
+      "Default" : "greg.cope@ft.com"
+    }
+  },
 
   "Mappings" : {
     "AWSRegionArch2AMI" : {
-      "us-east-1"      : { "IE9ChromeFirefoxSafari" : "ami-0f7eae66", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_East" },
-      "us-west-1"      : { "IE9ChromeFirefoxSafari" : "ami-f97029bc", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_West" },
-      "us-west-2"      : { "IE9ChromeFirefoxSafari" : "ami-867af7b6", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_West2" },
-      "eu-west-1"      : { "IE9ChromeFirefoxSafari" : "ami-33b98747", "UserData" :  "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=EU_WEST" },
-      "ap-southeast-1" : { "IE9ChromeFirefoxSafari" : "ami-7c14572e", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Singapore" },
-      "ap-southeast-2" : { "IE9ChromeFirefoxSafari" : "ami-6cb82956", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Sidney" },
-      "ap-northeast-1" : { "IE9ChromeFirefoxSafari" : "ami-6a5cea6b", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Tokyo" },
-      "sa-east-1"      : { "IE9ChromeFirefoxSafari" : "ami-cc7fa0d1", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=SA_East" }
+      "us-east-1"      : { "IE9ChromeFirefox" : "ami-0f7eae66", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_East" },
+      "us-west-1"      : { "IE9ChromeFirefox" : "ami-f97029bc", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_West" },
+      "us-west-2"      : { "IE9ChromeFirefox" : "ami-867af7b6", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=US_West2" },
+      "eu-west-1"      : { "IE9ChromeFirefox" : "ami-33b98747", "UserData" :  "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=EU_WEST" },
+      "ap-southeast-1" : { "IE9ChromeFirefox" : "ami-385a1e6a", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Singapore" },
+      "ap-southeast-2" : { "IE9ChromeFirefox" : "ami-6cb82956", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Sydney" },
+      "ap-northeast-1" : { "IE9ChromeFirefox" : "ami-6a5cea6b", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=Tokyo" },
+      "sa-east-1"      : { "IE9ChromeFirefox" : "ami-cc7fa0d1", "UserData" : "wpt_server=54.194.28.77 wpt_key=61c74f0abc0cc3c018963bf72191aff6 wpt_location=SA_East" }
     }
   },
 
   "Resources" : {
+    "WebPageTestScalingNotificationTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "Subscription": [ { "Endpoint": { "Ref": "OperatorEmail" }, "Protocol": "email" } ]
+      }
+    },
+
     "WebPageTestAutoScalingGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : { 
@@ -29,14 +44,18 @@
 	  { "Key" : "product", "Value" : "Web Page Test", "PropagateAtLaunch" : "true" },
 	  { "Key" : "ipcode", "Value" : "110", "PropagateAtLaunch" : "true" },
 	  { "Key" : "role", "Value" : "Web Page Test Windows instance", "PropagateAtLaunch" : "true" }
-	  ]
+	  ],
+	"NotificationConfiguration" : {
+	  "TopicARN" : { "Ref" : "WebPageTestScalingNotificationTopic" },
+	  "NotificationTypes" : [ "autoscaling:EC2_INSTANCE_LAUNCH","autoscaling:EC2_INSTANCE_LAUNCH_ERROR","autoscaling:EC2_INSTANCE_TERMINATE", "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"]
+	}
       }
     },
 
     "WebPageTestLaunchConfig" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties" : {
-	"ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "IE9ChromeFirefoxSafari" ]},
+	"ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "IE9ChromeFirefox" ]},
 	"UserData" : { "Fn::Base64" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "UserData" ] } },
 	"SecurityGroups" : [{ "Ref" : "WebPageTestdefaultNone" }],
         "InstanceType" : "m1.medium"

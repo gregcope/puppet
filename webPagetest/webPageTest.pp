@@ -109,7 +109,7 @@ package { 'isc-dhcp-common': ensure => 'absent' }
 # set a good expires config
 file { '/etc/apache2/mods-available/expires.conf':
     ensure => present,
-    content => "<IfModule mod_expires.c>\n\tExpiresActive OnExpiresByType application/x-javascript \"access plus 1 year\"\n\tExpiresByType application/javascript \"access plus 1 year\"\n\tExpiresByType text/css \"access plus 1 year\"\n\tExpiresByType image/* \"access plus 1 year\"\n</IfModule>",
+    content => "<IfModule mod_expires.c>\n\tExpiresActive On\n\tExpiresByType application/x-javascript \"access plus 1 year\"\n\tExpiresByType application/javascript \"access plus 1 year\"\n\tExpiresByType text/css \"access plus 1 year\"\n\tExpiresByType image/* \"access plus 1 year\"\n</IfModule>",
     mode => '0644',
     require => Package [ 'apache2' ]
 }
@@ -131,15 +131,25 @@ file { '/etc/apache2/conf.d/etags.conf':
 
 }
 
+# update /etc/default/console-setup and reduce ttys to 3!
+exec { 'updateConsoleSetup':
+     logoutput => true,
+     command => '/usr/bin/perl -p -i -e \'s!ACTIVE_CONSOLES="/dev/tty\[1\-6\]"!ACTIVE_CONSOLES="/dev/tty\[1\-2\]"!\'     /etc/default/console-setup',
+     unless => '/bin/grep \'ACTIVE_CONSOLES="/dev/tty\[1\-2\]"\' /etc/default/console-setup',
+}
+
 # remove all the unused tty's
 file { '/etc/init/tty3.conf':
     ensure => absent,
+    require => Exec [ 'updateConsoleSetup' ],
 }
 file { '/etc/init/tty4.conf':
     ensure => absent,
+    require => Exec [ 'updateConsoleSetup' ],
 }
 file {'/etc/init/tty5.conf':
     ensure => absent,
+    require => Exec [ 'updateConsoleSetup' ],
 }
 file {'/etc/init/tty6.conf':
     ensure => absent,
@@ -149,7 +159,7 @@ file {'/etc/init/tty6.conf':
 exec { 'reload-init':
     logoutput => true,
     command => '/sbin/init q',
-   subscribe => [ File['/etc/init/tty3.conf'], File['/etc/init/tty4.conf'], File['/etc/init/tty5.conf'], File['/etc/init/tty6.conf'] ],
+    subscribe => [ File['/etc/init/tty3.conf'], File['/etc/init/tty4.conf'], File['/etc/init/tty5.conf'], File['/etc/    init/tty6.conf'], Exec [ 'updateConsoleSetup' ] ],
     refreshonly => true
 }
 
@@ -363,3 +373,8 @@ exec { 'renamefeedsIncSample':
     unless => '/bin/ls -la /var/www/webpagetest/settings/feeds.inc',
     require => Exec [ 'unzipinstallwebpagetest' ],
 }
+
+# disable IE7
+# perl -p -i -e 's/(^1=.+_IE7)/;$1/g' locations.ini
+# egrep '^1=.+_IE7' locations.ini
+
