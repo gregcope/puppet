@@ -131,15 +131,25 @@ file { '/etc/apache2/conf.d/etags.conf':
 
 }
 
+# update /etc/default/console-setup and reduce ttys to 3!
+exec { 'updateConsoleSetup':
+    logoutput => true,
+    command => '/usr/bin/perl -p -i -e "s/ACTIVE_CONSOLES=\"/dev/tty[1-6]\"/ACTIVE_CONSOLES=\"/dev/tty[1-6]\"/" /etc/default/console-setup',
+    unless => '/usr/bin/grep \'ACTIVE_CONSOLES="/dev/tty[1-3]"\' /etc/default/console-setup',
+}
+
 # remove all the unused tty's
 file { '/etc/init/tty3.conf':
     ensure => absent,
+    require => Exec [ 'updateConsoleSetup' ],
 }
 file { '/etc/init/tty4.conf':
     ensure => absent,
+    require => Exec [ 'updateConsoleSetup' ],
 }
 file {'/etc/init/tty5.conf':
     ensure => absent,
+    require => Exec [ 'updateConsoleSetup' ],
 }
 file {'/etc/init/tty6.conf':
     ensure => absent,
@@ -149,7 +159,7 @@ file {'/etc/init/tty6.conf':
 exec { 'reload-init':
     logoutput => true,
     command => '/sbin/init q',
-   subscribe => [ File['/etc/init/tty3.conf'], File['/etc/init/tty4.conf'], File['/etc/init/tty5.conf'], File['/etc/init/tty6.conf'] ],
+    subscribe => [ File['/etc/init/tty3.conf'], File['/etc/init/tty4.conf'], File['/etc/init/tty5.conf'], File['/etc/init/tty6.conf'] ],
     refreshonly => true
 }
 
