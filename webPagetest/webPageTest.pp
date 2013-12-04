@@ -109,7 +109,7 @@ package { 'isc-dhcp-common': ensure => 'absent' }
 # set a good expires config
 file { '/etc/apache2/mods-available/expires.conf':
     ensure => present,
-    content => "<IfModule mod_expires.c>\n\tExpiresActive OnExpiresByType application/x-javascript \"access plus 1 year\"\n\tExpiresByType application/javascript \"access plus 1 year\"\n\tExpiresByType text/css \"access plus 1 year\"\n\tExpiresByType image/* \"access plus 1 year\"\n</IfModule>",
+    content => "<IfModule mod_expires.c>\n\tExpiresActive On\n\tExpiresByType application/x-javascript \"access plus 1 year\"\n\tExpiresByType application/javascript \"access plus 1 year\"\n\tExpiresByType text/css \"access plus 1 year\"\n\tExpiresByType image/* \"access plus 1 year\"\n</IfModule>",
     mode => '0644',
     require => Package [ 'apache2' ]
 }
