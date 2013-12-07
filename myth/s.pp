@@ -1,5 +1,5 @@
 # set some defaults before we go...
-$mysqlPassword = ''
+$mysqlPassword = '!!m21cat'
 
 # ensure apache installed/started
 service { 'apache2':
@@ -61,6 +61,46 @@ exec { 'enableDefaultSsl':
     unless => '/bin/readlink -e /etc/apache2/sites-enabled/default-ssl',
     notify => Exec['restart-apache2'],
     require => Package[ 'apache2' ],
+}
+
+# Enabled strong Apache SSLProtocols
+exec { 'enableStrongApacheSSLProtocols':
+    logoutput => true,
+    command => '/usr/bin/perl -p -i -e "s/^SSLProtocol.*/SSLProtocol -ALL +SSLv3 +TLSv1/" /etc/apache2/mods-enabled/ssl.conf',
+    unless =>  '/bin/grep \'^SSLProtocol -ALL +SSLv3 +TLSv1\' /etc/apache2/mods-enabled/ssl.conf',
+    notify => Exec['restart-apache2'],
+    require => Exec [ 'enableDefaultSsl' ],
+}
+
+# Enabled strong Apache SSLCipherSuite
+exec { 'enableStrongApacheSSLCipherSuite':
+    logoutput => true,
+    command => '/usr/bin/perl -p -i -e "s/^SSLCipherSuite.*/SSLCipherSuite ALL:!ADH:RC4+RSA:+HIGH:!MEDIUM:!LOW:!SSLv2:!EXPORT/" /etc/apache2/mods-enabled/ssl.conf',
+    unless =>  '/bin/grep \'^SSLCipherSuite ALL:!ADH:RC4+RSA:+HIGH:!MEDIUM:!LOW:!SSLv2:!EXPORT\' /etc/apache2/mods-enabled/ssl.conf',
+    notify => Exec['restart-apache2'],
+    require => Exec [ 'enableDefaultSsl' ],
+}
+
+# disabled TCP timestamps 
+exec { 'updatenetIpv4TcpTimestamps0':
+    logoutput => true,
+    command => '/usr/bin/perl -p -i -e "s/^net.ipv4.tcp_timestamps.*/net.ipv4.tcp_timestamps = 0/" /etc/sysctl.conf',
+    unless => '/bin/grep \'^net.ipv4.tcp_timestamps = 0\' /etc/sysctl.conf',
+    notify => Exec[ 'sysctlP' ],
+}
+
+exec { 'setnetIpv4TcpTimestamps0':
+   logoutput => true,
+   command => '/bin/echo "net.ipv4.tcp_timestamps = 0" >> /etc/sysctl.conf',
+   unless => '/bin/grep \'^net.ipv4.tcp_timestamps\' /etc/sysctl.conf',
+   notify => Exec[ 'sysctlP' ],
+}
+
+# sysctl -p!
+exec  { 'sysctlP':
+    logoutput => true,
+    command => '/sbin/sysctl -p',
+    refreshonly => 'true',
 }
 
 # Ensure that expires, headers and deflate are on!
@@ -357,10 +397,19 @@ package { 'isc-dhcp-client': ensure => 'absent' }
 package { 'isc-dhcp-common': ensure => 'absent' }
 
 # Allow mail relay from the LAN
+# disable vfty for postfix
 augeas { 'postfix-main.cf':
     context => '/files/etc/postfix/main.cf',
-    changes => [ 'set mynetworks \'127.0.0.0/8 192.168.1.0/24\'', ],
+    changes => [ 'set mynetworks \'127.0.0.0/8 192.168.1.0/24\'', 'set disable_vrfy_command yes'],
     require => Package['augeas-tools'],
+    notify => Service [ 'postfix' ],
+}
+
+# restart postfix
+service { 'postfix':
+    ensure => 'running',
+    enable => 'true',
+    require => Augeas [ 'postfix-main.cf' ]
 }
 
 # setup basic auth for mythweb from non-lan IPs
