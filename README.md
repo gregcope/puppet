@@ -1,7 +1,7 @@
-puppet
-======
+Stuff
+=====
 
-Puppet modules/things
+Puppet, mythtv and AWS modules/things
 
 • Some simple Puppet modules/scripts/resources
 * I apply puppet lint, but only fix errors
