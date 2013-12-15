@@ -15,7 +15,7 @@ exec { 'apacheExpires':
     command => '/usr/sbin/a2enmod expires',
     unless => "/bin/readlink -e /etc/apache2/mods-enabled/expires.load",
     require => Package[ 'apache2' ],
-    nofity => Service [ 'apache2' ],
+    notify => Service [ 'apache2' ],
 }
 
 # enable headers if not enabled
@@ -24,7 +24,7 @@ exec { 'apacheHeaders':
     command => '/usr/sbin/a2enmod headers',
     unless => '/bin/readlink -e /etc/apache2/mods-enabled/headers.load',
     require => Package[ 'apache2' ],
-    nofity => Service [ 'apache2' ],
+    notify => Service [ 'apache2' ],
 }   
 
 # enable deflate if not enabled
@@ -33,7 +33,7 @@ exec { 'apacheDeflate':
     command => '/usr/sbin/a2enmod deflate',
     unless => "/bin/readlink -e /etc/apache2/mods-enabled/deflate.load",
     require => Package[ 'apache2' ],
-    nofity => Service [ 'apache2' ],
+    notify => Service [ 'apache2' ],
 }   
 
 # enabled rewrite if note enabled
@@ -42,7 +42,7 @@ exec { 'apacheRewrite':
     command => '/usr/sbin/a2enmod rewrite',
     unless => "/bin/readlink -e /etc/apache2/mods-enabled/rewrite.load",
     require => Package[ 'apache2' ],
-    nofity => Service [ 'apache2' ],
+    notify => Service [ 'apache2' ],
 }   
 
 # enabled ssl if not enabled
@@ -51,7 +51,7 @@ exec { 'apacheSsl':
    command => '/usr/sbin/a2enmod ssl',
    unless => "/bin/readlink -e /etc/apache2/mods-enabled/ssl.load",
    require => Package[ 'apache2' ],
-   nofity => Service [ 'apache2' ],
+   notify => Service [ 'apache2' ],
 }   
 
 # enabled default ssl site
@@ -59,7 +59,7 @@ exec { 'enableDefaultSsl':
     logoutput => true,
     command => '/usr/sbin/a2ensite default-ssl',
     unless => '/bin/readlink -e /etc/apache2/sites-enabled/default-ssl',
-    nofity => Service [ 'apache2' ],
+    notify => Service [ 'apache2' ],
     require => Package[ 'apache2' ],
 }
 
@@ -68,7 +68,7 @@ exec { 'enableStrongApacheSSLProtocols':
     logoutput => true,
     command => '/usr/bin/perl -p -i -e "s/^SSLProtocol.*/SSLProtocol -ALL +SSLv3 +TLSv1/" /etc/apache2/mods-enabled/ssl.conf',
     unless =>  '/bin/grep \'^SSLProtocol -ALL +SSLv3 +TLSv1\' /etc/apache2/mods-enabled/ssl.conf',
-    nofity => Service [ 'apache2' ],
+    notify => Service [ 'apache2' ],
     require => Exec [ 'enableDefaultSsl' ],
 }
 
@@ -77,7 +77,7 @@ exec { 'enableStrongApacheSSLCipherSuite':
     logoutput => true,
     command => '/usr/bin/perl -p -i -e "s/^SSLCipherSuite.*/SSLCipherSuite ALL:!ADH:RC4+RSA:+HIGH:!MEDIUM:!LOW:!SSLv2:!EXPORT/" /etc/apache2/mods-enabled/ssl.conf',
     unless =>  '/bin/grep \'^SSLCipherSuite ALL:!ADH:RC4+RSA:+HIGH:!MEDIUM:!LOW:!SSLv2:!EXPORT\' /etc/apache2/mods-enabled/ssl.conf',
-    nofity => Service [ 'apache2' ],
+    notify => Service [ 'apache2' ],
     require => Exec [ 'enableDefaultSsl' ],
 }
 
@@ -417,7 +417,7 @@ file { '/etc/apache2/mythweb-auth':
     ensure => present,
     content => "<Location /mythweb>\n\tAuthType Basic\n\tAuthName mythweb\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.0.0/24\n</Location>",
     mode => '0644',
-    nofity => Service [ 'apache2' ],
+    notify => Service [ 'apache2' ],
     require => Package [ 'apache2' ],
 }
 
@@ -448,7 +448,7 @@ file { '/etc/apache2/mods-available/expires.conf':
     content => "<IfModule mod_expires.c>\n\tExpiresActive On\n\tExpiresByType application/x-javascript \"access plus 1 year\"\n\tExpiresByType application/javascript \"access plus 1 year\"\n\tExpiresByType text/css \"access plus 1 year\"\n\tExpiresByType image/* \"access plus 1 year\"\n</IfModule>",
     mode => '0644',
     require => Exec [ 'apacheExpires' ],
-    nofity => Service [ 'apache2' ],
+    notify => Service [ 'apache2' ],
 }
 
 # set a good deflate config
@@ -457,7 +457,7 @@ file { '/etc/apache2/mods-enabled/deflate.conf':
     content => "IfModule mod_deflate.c>\n\n\t# stuff to deflate\n\tAddOutputFilterByType DEFLATE text/plain text/html text/xml text/css\n\tAddOutputFilterByType DEFLATE application/xml application/xhtml+xml\n\tAddOutputFilterByType DEFLATE application/rss+xml application/atom+xml\n\tAddOutputFilterByType DEFLATE application/javascript text/javascript application/x-javascript\n\n\t#DeflateCompressionLevel 9\n\n\t# work arounds for older browsers\n\tBrowserMatch ^Mozilla/4 gzip-only-text/html\n\tBrowserMatch ^Mozilla/4\\.0[678] no-gzip\n\tBrowserMatch \\bMSI[E] !no-gzip !gzip-only-text/html\n\tBrowserMatch \\bMSIE\s6.0 gzip-only-text/html\n\n\t# Make sure proxies don't deliver the wrong content\n\tHeader append Vary User-Agent env=!dont-vary\n\n\t# logging for testing only\n\tDeflateFilterNote Input instream\n\tDeflateFilterNote Output outstream\n\tDeflateFilterNote Ratio ratio\n\t# logs out size / insize % of orig size\n\tLogFormat '\"%r\" %{outstream}n/%{instream}n (%{ratio}n%%)' deflate\n\tCustomLog /var/log/apache2/deflate_log deflate\n</IfModule>",
     mode => '0644',
     require => Exec [ 'apacheDeflate' ],
-    nofity => Service [ 'apache2' ],
+    notify => Service [ 'apache2' ],
 }
 
 # remove etags
@@ -465,7 +465,7 @@ file { '/etc/apache2/conf.d/etags.conf':
     ensure => present,
     content => 'FileETag none',
     mode => '0644',
-    nofity => Service [ 'apache2' ],
+    notify => Service [ 'apache2' ],
     require => Package [ 'apache2' ],
 }
 
@@ -630,7 +630,7 @@ exec { 'wgetinstallpageSpeedDeb':
     logoutput => true,
     user => root,
     require => Package [ 'apache2' ],
-    nofity => Service [ 'apache2' ],
+    notify => Service [ 'apache2' ],
 }
 
 # enabled ModPagespeed instrumentation
@@ -638,7 +638,7 @@ exec { 'ModPagespeedEnableFilters_add_instrumentation':
     logoutput => true,
     unless => '/bin/grep "    ModPagespeedEnableFilters add_instrumentation" /etc/apache2/mods-available/pagespeed.conf',
     command => '/usr/bin/perl -p -i -e \'s/    # ModPagespeedEnableFilters add_instrumentation/    ModPagespeedEnableFilters add_instrumentation/\' /etc/apache2/mods-available/pagespeed.conf',
-    nofity => Service [ 'apache2' ],
+    notify => Service [ 'apache2' ],
     require => Exec [ 'wgetinstallpageSpeedDeb' ],
 }
 
@@ -647,7 +647,7 @@ exec { 'ModPagespeedReportUnloadTime_on':
     logoutput => true,
     unless => '/bin/grep "    ModPagespeedReportUnloadTime on" /etc/apache2/mods-available/pagespeed.conf',
     command => '/usr/bin/perl -p -i -e \'s/    # ModPagespeedReportUnloadTime on/    ModPagespeedReportUnloadTime on/\' /etc/apache2/mods-available/pagespeed.conf',
-    nofity => Service [ 'apache2' ],
+    notify => Service [ 'apache2' ],
     require => Exec [ 'wgetinstallpageSpeedDeb' ],
 }
 
@@ -656,7 +656,7 @@ exec { 'AllowFromLAN':
     logoutput => true,
     unless => '/bin/grep "        Allow from 192.168.0.0/24" /etc/apache2/mods-available/pagespeed.conf',
     command => '/usr/bin/perl -p -i -e \'s/        Allow from 127.0.0.1/        Allow from 192.168.0.0\/24/g\' /etc/apache2/mods-available/pagespeed.conf',
-    nofity => Service [ 'apache2' ],
+    notify => Service [ 'apache2' ],
     require => Exec [ 'wgetinstallpageSpeedDeb' ],
 }
 
@@ -704,10 +704,10 @@ ssh_authorized_key { 'mythsshkey':
 # untar channels.tgz channels icons
 exec { 'untgzChannelIcons':
     logoutput => true,
-    cwd => '/home/myth/.mythtv/',
-    user => myth,
+    cwd => '/home/mythtv/.mythtv/',
+    user => mythtv,
     command => '/bin/tar -zxf /home/myth/nfs/puppet/channels.tar.gz',
-    creates => '/home/myth/.mythtv/channels/bbc_one.jpg'
+    creates => '/home/mythtv/.mythtv/channels/bbc_one.jpg'
 }
 
 file { '/etc/ssh/ssh_host_rsa_key.pub':
