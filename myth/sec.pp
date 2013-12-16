@@ -1,4 +1,4 @@
-ossecWuiVersion=0.8
+$ossecWuiVersion='0.8'
 #lsbdistcodename facter for precise
 #fqdn is facter for full hostname
 
@@ -35,12 +35,21 @@ service { 'ossec-hids-local':
     enable => 'true',
 }
 
+# download ossec-wui checksum
+exec { 'wgetOssecWuiChecksum':
+    logoutput => true,
+    cwd => '/tmp',
+    command => "/usr/bin/wget http://www.ossec.net/files/ossec-wui-${ossecWuiVersion}-checksum.txt",
+    unless => "/bin/ls /tmp/ossec-wui-${ossecWuiVersion}-checksum.txt"
+}
+
 # download ossec-wui and checksum
 exec { 'wgetOssecWui':
     logoutput => true,
     cwd => '/tmp',
-    command => "/usr/bin/wget http://www.ossec.net/files/ossec-wui-$ossecWuiVersion.tar.gz && /usr/bin/wget http://www.ossec.net/files/ossec-wui-$ossecWuiVersion-checksum.txt",
-    unless => "/usr/bin/sha1sum -c /tmp/ossec-wui-$ossecWuiVersion-checksum.txt",
+    command => "/usr/bin/wget http://www.ossec.net/files/ossec-wui-${ossecWuiVersion}.tar.gz",
+    unless => "/usr/bin/sha1sum -c /tmp/ossec-wui-${ossecWuiVersion}-checksum.txt",
+    require => Exec [ 'wgetOssecWuiChecksum' ],
 }
 
 # add Apache ossec-wui auth config
@@ -61,7 +70,9 @@ user { 'www-data':
 file { '/var/www/ossec-wui':
     ensure => 'directory',
     owner => 'www-data',
-    group => 'www-data'
+    group => 'www-data',
+    recurse => true,
+    require => Exec [ 'mvOssecWui' ],
 }
 
 # ensure the ossec-wui/tmp dirs are correct
@@ -70,16 +81,26 @@ file { '/var/www/ossec-wui/tmp':
     owner => 'www-data',
     group => 'www-data',
     mode => '0770',
+    require => File [ '/var/www/ossec-wui' ],
 }
 
 # unpack the targz if everything else is done
 exec { 'untgzOssecWui':
     logoutput => true,
-    cwd => '/var/www',
+    cwd => '/tmp',
     user => 'www-data',
-    command => '/bin/tar -C /var/www/ossec-wui -zxf /tmp/ossec-wui-$ossecWuiVersion.tar.gz',
-    creates => '/var/www/ossec-wui/index.php',
-    require => [ File [ '/var/www/ossec-wui/tmp' ], User [ 'www-data' ], File [ '/var/www/ossec-wui' ], Exec [ 'wgetOssecWui' ], Package [ 'ossec-hids-local' ], Package [ 'apache2' ] ],
+    command => "/bin/tar -zxf /tmp/ossec-wui-${ossecWuiVersion}.tar.gz",
+    unless => '/bin/ls -la /var/www/ossec-wui/index.php',
+    require => [ User [ 'www-data' ], Exec [ 'wgetOssecWui' ], Package [ 'ossec-hids-local' ], Package [ 'apache2' ] ],
+}
+
+# move the ossec-wui-version to ossec-wui ...
+exec { 'mvOssecWui':
+    logoutput => true,
+    cwd => '/tmp',
+    command => "/bin/mv ossec-wui-${ossecWuiVersion} /var/www/ossec-wui",
+    unless => '/bin/ls -la /var/www/ossec-wui/index.php',
+    require => Exec [ 'untgzOssecWui' ],
     notify => Service [ 'apache2' ],
 }
 
