@@ -1,6 +1,13 @@
 #lsbdistcodename facter for precise
 #fqdn is facter for full hostname
 
+# to do
+# tune ossec (local users)
+# adddns (util.sh) monitoring for domains (www/s.webarmadillo.net)
+# monitor itself http://www.immutablesecurity.com/index.php/tag/ossec/page/2/
+# monitor ossec with zabbix - stats from http://www.immutablesecurity.com/index.php/tag/ossec/page/2/
+
+
 # ensure root cannot login directly
 augeas { '/etc/ssh/sshd_config':
     context => '/files/etc/ssh/sshd_config',
