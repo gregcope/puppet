@@ -1,3 +1,6 @@
+#lsbdistcodename facter for precise
+#fqdn is facter for full hostname
+
 # ensure root cannot login directly
 augeas { '/etc/ssh/sshd_config':
     context => '/files/etc/ssh/sshd_config',
