@@ -1,3 +1,4 @@
+ossecWuiVersion=0.8
 #lsbdistcodename facter for precise
 #fqdn is facter for full hostname
 
@@ -38,14 +39,14 @@ service { 'ossec-hids-local':
 exec { 'wgetOssecWui':
     logoutput => true,
     cwd => '/tmp',
-    command => '/usr/bin/wget http://www.ossec.net/files/ossec-wui-0.8.tar.gz && /usr/bin/wget http://www.ossec.net/files/ossec-wui-0.8-checksum.txt',
-    unless => '/usr/bin/sha1sum -c /tmp/ossec-wui-0.8-checksum.txt',
+    command => "/usr/bin/wget http://www.ossec.net/files/ossec-wui-$ossecWuiVersion.tar.gz && /usr/bin/wget http://www.ossec.net/files/ossec-wui-$ossecWuiVersion-checksum.txt",
+    unless => "/usr/bin/sha1sum -c /tmp/ossec-wui-$ossecWuiVersion-checksum.txt",
 }
 
 # add Apache ossec-wui auth config
-file { '/etc/apache2/conf.d/ossec-wui-0.8-auth':
+file { '/etc/apache2/conf.d/ossec-wui-auth':
     ensure => present,
-    content => "<Location /ossec-wui-0.8>\n\tAuthType Basic\n\tAuthName ossec-wui\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.0.0/24\n</Location>",
+    content => "<Location /ossec-wui>\n\tAuthType Basic\n\tAuthName ossec-wui\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.0.0/24\n</Location>",
     mode => '0644',
     notify => Service [ 'apache2' ],
     require => Package [ 'apache2' ],
@@ -56,15 +57,15 @@ user { 'www-data':
     groups => 'ossec',
 }
 
-# ensure the ossec-wui-0.8 perms are correct
-file { '/var/www/ossec-wui-0.8':
+# ensure the ossec-wui perms are correct
+file { '/var/www/ossec-wui':
     ensure => 'directory',
     owner => 'www-data',
     group => 'www-data'
 }
 
-# ensure the ossec-wui-0.8/tmp dirs are correct
-file { '/var/www/ossec-wui-0.8/tmp':
+# ensure the ossec-wui/tmp dirs are correct
+file { '/var/www/ossec-wui/tmp':
     ensure => 'directory',
     owner => 'www-data',
     group => 'www-data',
@@ -76,9 +77,9 @@ exec { 'untgzOssecWui':
     logoutput => true,
     cwd => '/var/www',
     user => 'www-data',
-    command => '/bin/tar -zxf /tmp/ossec-wui-0.8.tar.gz',
-    creates => '/var/www/ossec-wui-0.8/index.php',
-    require => [ File [ '/var/www/ossec-wui-0.8/tmp' ], User [ 'www-data' ], File [ '/var/www/ossec-wui-0.8' ], Exec [ 'wgetOssecWui' ], Package [ 'ossec-hids-local' ], Package [ 'apache2' ] ],
+    command => '/bin/tar -C /var/www/ossec-wui -zxf /tmp/ossec-wui-$ossecWuiVersion.tar.gz',
+    creates => '/var/www/ossec-wui/index.php',
+    require => [ File [ '/var/www/ossec-wui/tmp' ], User [ 'www-data' ], File [ '/var/www/ossec-wui' ], Exec [ 'wgetOssecWui' ], Package [ 'ossec-hids-local' ], Package [ 'apache2' ] ],
     notify => Service [ 'apache2' ],
 }
 
@@ -126,5 +127,3 @@ exec { '/var/log/chkrootkit/log.expected':
     command => '/etc/cron.daily/chkrootkit && /bin/cp -a /var/log/chkrootkit/log.today /var/log/chkrootkit/log.expected',
     require => File [ '/etc/chkrootkit.conf' ],
 }
-
-
