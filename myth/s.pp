@@ -733,7 +733,7 @@ file { '/home/myth/.bash_aliases':
     owner => 'myth',
     group => 'myth',
     mode => '0644',
-    content => 'alias update="sudo apt-get update && sudo apt-get upgrade; sync;sync;sync"',
+    content => 'alias update="/usr/bin/sudo apt-get update && /usr/bin/sudo apt-get upgrade; sudo /var/ossec/bin/agent_control -r -u 000; sync;sync;sync"',
 }
 
 # aliase file

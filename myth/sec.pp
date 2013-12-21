@@ -1,4 +1,5 @@
 $ossecWuiVersion='0.8'
+$arachniVersion="0.4.5.2-0.4.2.1"
 #lsbdistcodename facter for precise
 #fqdn is facter for full hostname
 
@@ -7,7 +8,7 @@ $ossecWuiVersion='0.8'
 # adddns (util.sh) monitoring for domains (www/s.webarmadillo.net)
 # monitor itself http://www.immutablesecurity.com/index.php/tag/ossec/page/2/
 # monitor ossec with zabbix - stats from http://www.immutablesecurity.com/index.php/tag/ossec/page/2/
-
+# http://www.security-marathon.be/?p=951
 
 # ensure root cannot login directly
 augeas { '/etc/ssh/sshd_config':
@@ -50,6 +51,23 @@ exec { 'wgetOssecWui':
     command => "/usr/bin/wget http://www.ossec.net/files/ossec-wui-${ossecWuiVersion}.tar.gz",
     unless => "/usr/bin/sha1sum -c /tmp/ossec-wui-${ossecWuiVersion}-checksum.txt",
     require => Exec [ 'wgetOssecWuiChecksum' ],
+}
+
+# download arachni checksum
+exec { 'wgetArachniChecksum':
+    logoutput => true,
+    cwd => '/tmp',
+    command => "/usr/bin/wget http://downloads.arachni-scanner.com/arachni-${arachniVersion}-linux-x86_64.tar.gz.sha1",
+    unless => "/bin/ls /tmp/arachni-${arachniVersion}-linux-x86_64.tar.gz.sha1"
+}
+
+# download arachni if checksum is found
+exec { 'wgetArachni':
+    logoutput => true,
+    cwd => '/tmp',
+    command => "/usr/bin/wget http://downloads.arachni-scanner.com/arachni-${arachniVersion}-linux-x86_64.tar.gz",
+    unless => "/bin/echo \"`/bin/cat /tmp/arachni-${arachniVersion}-linux-x86_64.tar.gz.sha1`  arachni-${arachniVersion}-linux-x86_64.tar.gz\" | /usr/bin/sha1sum -c -",
+    require => Exec [ 'wgetArachniChecksum' ],
 }
 
 # add Apache ossec-wui auth config
