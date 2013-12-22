@@ -1,5 +1,5 @@
 # set some defaults before we go...
-$mysqlPassword = ''
+$mysqlPassword = '!!m21cat'
 
 # lets make sure we have 0.27 installed
 package { 'libmyth-0.27-0':
@@ -224,4 +224,10 @@ exec { 'importMythconvergeSQL':
     command => "/usr/bin/mysql -uroot -p$mysqlPassword mythconverg < /home/myth/nfs/mythconverg.sql",
     unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.channel' | /bin/grep 55",
     require => Exec [ 'restartmythtvbackend' ],
+}
+
+# enabled realtime limits for myth (frontend user)
+file { '/etc/security/limits.d/myth.conf': 
+    ensure => file,
+    content => "* - rtprio 0\n* - nice 0\nmyth - rtprio 50\nmyth - nice 0\n",
 }
