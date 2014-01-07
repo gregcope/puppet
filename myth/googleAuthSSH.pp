@@ -1,3 +1,11 @@
+#
+# Install and configure Google Authenticator 2FA for ssh on Ubuntu 12.04
+# 2FA is disbled for local networks to save hassel 
+#
+
+# lifted in part from;
+# http://blog.remibergsma.com/2013/06/08/playing-with-two-facor-authentication-in-linux-using-google-authenticator/
+
 # install package
 package { 'libpam-google-authenticator': }
 
