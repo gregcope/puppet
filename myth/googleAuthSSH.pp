@@ -20,7 +20,7 @@ file {'/etc/security/access-local.conf':
     content => "# Two-factor can be skipped on local network\n+ : ALL : 192.168.0.0/24\n+ : ALL : LOCAL\n- : ALL : ALL\n"
 }
 
-# edit /etc/pam.d/sshd and ensure these lines are at the end
+# edit /etc/pam.d/sshd and ensure these next three lines are at the end
 # #these lines have to be at the end
 # auth [success=1 default=ignore] pam_access.so accessfile=/etc/security/access-local.conf
 # auth required pam_google_authenticator.so
