@@ -4,11 +4,18 @@ $arachniVersion="0.4.5.2-0.4.2.1"
 #fqdn is facter for full hostname
 
 # to do
-# tune ossec (local users)
+# done: 
+# tune ossec (local users)
 # adddns (util.sh) monitoring for domains (www/s.webarmadillo.net)
 # monitor itself http://www.immutablesecurity.com/index.php/tag/ossec/page/2/
+#
+# todo:
 # monitor ossec with zabbix - stats from http://www.immutablesecurity.com/index.php/tag/ossec/page/2/
+# http://www.thefanclub.co.za/how-to/how-install-apache2-modsecurity-and-modevasive-ubuntu-1204-lts-server mod security?
+#
+# referances:
 # http://www.security-marathon.be/?p=951
+# https://github.com/nzin/puppet-ossec/blob/master/templates/10_ossec.conf.erb
 
 # ensure root cannot login directly
 augeas { '/etc/ssh/sshd_config':
