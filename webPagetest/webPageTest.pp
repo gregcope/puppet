@@ -3,6 +3,7 @@ $webpagetestVersion = '2.13'
 $webpagetestzipmd5sum = '1997e1ad5e70d9dd2276ae9d6cbc75de'
 $wpt_key = '61c74f0abc0cc3c018963bf72191aff6'
 $wpt_server = '54.194.28.77'
+$wptmonitor_JobProcessorKey = 'e7df7cd2ca07f4f1ab415d457a6e1c13'
 
 # ensure apache installed/started
 service { 'apache2':
@@ -99,6 +100,19 @@ package { 'php5-gd': }
 package { 'libphp-pclzip': }
 package { 'php5-curl': }
 
+# for webpagetest monitor
+package { 'php-pear': }
+package { 'php5-sqlite': }
+# these are needed for pecl_http
+# http://pmellor.wordpress.com/2013/05/13/adding-http-to-php-on-ubuntu-12-04-lts/
+package { 'libcurl3': }
+package { 'php5-dev': }
+package { 'libcurl4-gnutls-dev': }
+package { 'libmagic-dev': }
+package { 'make': }
+package { 'php-http': }
+package { 'libpcre3-dev': }
+
 # make sure some are removed!
 package { 'heirloom-mailx': ensure => 'absent' }
 package { 'xscreensaver': ensure => 'absent' }
@@ -159,7 +173,7 @@ file {'/etc/init/tty6.conf':
 exec { 'reload-init':
     logoutput => true,
     command => '/sbin/init q',
-    subscribe => [ File['/etc/init/tty3.conf'], File['/etc/init/tty4.conf'], File['/etc/init/tty5.conf'], File['/etc/    init/tty6.conf'], Exec [ 'updateConsoleSetup' ] ],
+    subscribe => [ File['/etc/init/tty3.conf'], File['/etc/init/tty4.conf'], File['/etc/init/tty5.conf'], File['/etc/init/tty6.conf'], Exec [ 'updateConsoleSetup' ] ],
     refreshonly => true
 }
 
@@ -377,4 +391,86 @@ exec { 'renamefeedsIncSample':
 # disable IE7
 # perl -p -i -e 's/(^1=.+_IE7)/;$1/g' locations.ini
 # egrep '^1=.+_IE7' locations.ini
+
+# web page test monitor cron to run jobs
+# http://www.wptmonitor.org/home/requirements
+cron { 'jobProcessor':
+    command => "curl localhost/wptmonitor/jobProcessor.php?key=$wptmonitor_JobProcessorKey >> /var/www/webpagetest/wptmonitor/jobProcessor.log",
+    user => www-data,
+    ensure=> 'present',
+}
+
+#cron { 'ec2Processor':
+#    command => "curl localhost/wptmonitor/ec2Processor.php?key=$wptmonitor_JobProcessorKey",
+#    user => www-data,
+#    ensure=> 'present',
+#}
+
+# file is needed apparently to stop lines like
+# [Tue Jan 14 22:55:52 2014] [error] [client 217.155.57.118] PHP Warning:  fopen(ec2Processor.log): failed to open stream: Permission denied in /var/www/webpagetest/wptmonitor/utils.inc on line 484, referer: http://54.194.28.77/wptmonitor/wptHostStatus.php
+# stops errors if readable by webuser
+file { '/var/www/webpagetest/wptmonitor/jobProcessor.log':
+    ensure => 'present',
+    mode => '0644',
+    owner => 'www-data',
+    group => 'www-data',
+}
+
+# ec2Processor.log
+# stops errors if readable by web user...
+file { '/var/www/webpagetest/wptmonitor/ec2Processor.log':
+    ensure => 'present',
+    mode => '0644',
+    owner => 'www-data',
+    group => 'www-data',
+}
+
+# I think this is where it logs...
+# to stop [ERROR] [logOutput] Cannot open log file
+file { '/var/www/webpagetest/wptmonitor/jobProcessor_log.html':
+    ensure => 'present',
+    mode => '0644',
+    owner => 'www-data',
+    group => 'www-data',
+}
+
+# stops [Tue Jan 14 23:12:02 2014] [error] [client 127.0.0.1] PHP Warning:  parse_ini_file(./QueueStatus.ini): failed to open stream: No such file or directory in /var/www/webpagetest/wptmonitor/wpt_functions.inc on line 1293
+file { '/var/www/webpagetest/wptmonitor/QueueStatus.ini':
+    ensure => 'present',
+    mode => '0644',
+    owner => 'www-data',
+    group => 'www-data',
+}
+
+# install pecl_http ... naff I know
+exec { 'installpeclHttp':
+    logoutput => true,
+    command => '/usr/bin/sudo /usr/bin/pecl install pecl_http',
+    unless => '/bin/ls -la /usr/lib/php5/20090626/http.so',
+    require => [ Package [ 'libpcre3-dev' ], Package [ 'php-http' ], Package [ 'make' ], Package [ 'libcurl3' ], Package [ 'php5-dev' ], Package [ 'libcurl4-gnutls-dev' ], Package [ 'libmagic-dev' ], Package [ 'php5-dev' ] ],
+}
+
+
+# get apache to load the pecl_http extension
+# only if exec install worked and apache is installed
+# restart apache
+file { '/etc/php5/conf.d/pecl_http.ini':
+    ensure => 'present',
+    content => "; configuration for php pecl_http\nextension=http.so\n",
+    mode => '0644',
+    require => [ Exec [ 'installpeclHttp' ], Package [ 'apache2' ] ],
+    notify => Exec[ 'restart-apache2' ],
+}
+
+# fix DB error
+# Error: exception 'PDOException' with message 'SQLSTATE[HY000] [14] unable to open database file' in
+# and smarty template errors
+# from http://www.webpagetest.org/forums/showthread.php?tid=628 
+file { [ '/var/www/webpagetest/wptmonitor/temp', '/var/www/webpagetest/wptmonitor/db', '/var/www/webpagetest/wptmonitor/templates_c' ]:
+     ensure => directory,
+     owner => 'www-data',
+     group => 'www-data',
+     mode => '0775',
+     require => File [ '/etc/php5/conf.d/pecl_http.ini' ],
+}
 
