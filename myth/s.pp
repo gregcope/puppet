@@ -395,6 +395,8 @@ package { 'xscreensaver': ensure => 'absent' }
 package { 'network-manager': ensure => 'absent' }
 package { 'isc-dhcp-client': ensure => 'absent' }
 package { 'isc-dhcp-common': ensure => 'absent' }
+package { 'update-notifier': ensure => 'absent' }
+package { 'update-notifier-common': ensure => 'absent' }
 
 # Allow mail relay from the LAN
 # disable vfty for postfix
