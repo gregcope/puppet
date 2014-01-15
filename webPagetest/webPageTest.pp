@@ -445,7 +445,7 @@ file { '/var/www/webpagetest/wptmonitor/QueueStatus.ini':
 # install pecl_http ... naff I know
 exec { 'installpeclHttp':
     logoutput => true,
-    command => '/usr/bin/sudo /usr/bin/pecl install pecl_http',
+    command => '/usr/bin/sudo /usr/bin/pecl install pecl_http-1.7.6',
     unless => '/bin/ls -la /usr/lib/php5/20090626/http.so',
     require => [ Package [ 'libpcre3-dev' ], Package [ 'php-http' ], Package [ 'make' ], Package [ 'libcurl3' ], Package [ 'php5-dev' ], Package [ 'libcurl4-gnutls-dev' ], Package [ 'libmagic-dev' ], Package [ 'php5-dev' ] ],
 }
@@ -466,7 +466,7 @@ file { '/etc/php5/conf.d/pecl_http.ini':
 # Error: exception 'PDOException' with message 'SQLSTATE[HY000] [14] unable to open database file' in
 # and smarty template errors
 # from http://www.webpagetest.org/forums/showthread.php?tid=628 
-file { [ '/var/www/webpagetest/wptmonitor/temp', '/var/www/webpagetest/wptmonitor/db', '/var/www/webpagetest/wptmonitor/templates_c' ]:
+file { [ '/var/www/webpagetest/wptmonitor/graph', '/var/www/webpagetest/wptmonitor/temp', '/var/www/webpagetest/wptmonitor/db', '/var/www/webpagetest/wptmonitor/templates_c' ]:
      ensure => directory,
      owner => 'www-data',
      group => 'www-data',
