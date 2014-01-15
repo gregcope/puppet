@@ -2,6 +2,24 @@
 $wpt_key = '61c74f0abc0cc3c018963bf72191aff6'
 $wpt_server = '54.194.28.77'
 $wptmonitor_JobProcessorKey = 'e7df7cd2ca07f4f1ab415d457a6e1c13'
+$wptmysqlDB=wpt_monitor
+$wptmysqluser=wpt
+$wptmysqlpass=64hasdw1
+
+# create WPT DB user
+exec { 'createMysqlWPTUser':
+    logoutput => true,
+    command => "/usr/bin/mysql -e 'create user \"$wptmysqluser\"@\"localhost\" IDENTIFIED BY \"$wptmysqlpass\"; GRANT ALL on $wptmysqlDB.* to \"$wptmysqluser\"@\"localhost\";'",
+    unless => "/usr/bin/mysql -e 'select count(*) from mysql.user WHERE user=\"$wptmysqluser\"' | /bin/grep 1",
+}
+
+# set the DB user/password
+file { '/var/www/WPT-server-master/wptmonitor/settings/bootstrap.ini':
+    ensure => present,
+    content => "login=$wptmysqluser\npassword=$wptmysqlpass\n",
+    mode => '0644',
+    require => Exec [ 'unzipinstalljpvincentWPT-server' ],    
+}
 
 # ensure apache installed/started
 service { 'apache2':
@@ -97,6 +115,8 @@ package { 'libjpeg-turbo-progs': }
 package { 'php5-gd': }
 package { 'libphp-pclzip': }
 package { 'php5-curl': }
+package { 'mysql-server': }
+package { 'php5-mysql': }
 
 # for webpagetest monitor
 package { 'php-pear': }
@@ -241,7 +261,7 @@ file { [ '/var/www/WPT-server-master/tmp', '/var/www/WPT-server-master/results',
      owner => 'www-data',
      group => 'www-data',
      mode => '0775',
-     require => Exec [ 'unzipinstalljpvincentWPT-serve' ],
+     require => Exec [ 'unzipinstalljpvincentWPT-server' ],
 }
 
 # simple config file
@@ -269,7 +289,7 @@ exec { 'unzipinstalljpvincentWPT-server':
     logoutput => true,
     cwd => '/tmp',
     user => 'root',
-    command => "/usr/bin/unzip /tmp/master.zipi && /bin/mv /tmp/WPT-server-master/* /var/www/WPT-server-master/",
+    command => "/usr/bin/unzip /tmp/master.zip && /bin/mv /tmp/WPT-server-master/* /var/www/WPT-server-master/",
     # I know not perfect!
     unless => '/bin/ls -la /var/www/WPT-server-master/index.php',
     require => [ Package ['zip' ], Exec [ 'jpvincentWPT-server' ], File [ '/var/www/WPT-server-master' ] ],
@@ -395,6 +415,7 @@ cron { 'jobProcessor':
     command => "curl localhost/wptmonitor/jobProcessor.php?key=$wptmonitor_JobProcessorKey >> /var/www/WPT-server-master/wptmonitor/jobProcessor.log",
     user => www-data,
     ensure=> 'present',
+    require => Exec [ 'unzipinstalljpvincentWPT-server' ]
 }
 
 #cron { 'ec2Processor':
@@ -411,6 +432,7 @@ file { '/var/www/WPT-server-master/wptmonitor/jobProcessor.log':
     mode => '0644',
     owner => 'www-data',
     group => 'www-data',
+    require => Exec [ 'unzipinstalljpvincentWPT-server' ]
 }
 
 # ec2Processor.log
@@ -420,6 +442,7 @@ file { '/var/www/WPT-server-master/wptmonitor/ec2Processor.log':
     mode => '0644',
     owner => 'www-data',
     group => 'www-data',
+    require => Exec [ 'unzipinstalljpvincentWPT-server' ]
 }
 
 # I think this is where it logs...
@@ -429,6 +452,7 @@ file { '/var/www/WPT-server-master/wptmonitor/jobProcessor_log.html':
     mode => '0644',
     owner => 'www-data',
     group => 'www-data',
+    require => Exec [ 'unzipinstalljpvincentWPT-server' ]
 }
 
 # stops [Tue Jan 14 23:12:02 2014] [error] [client 127.0.0.1] PHP Warning:  parse_ini_file(./QueueStatus.ini): failed to open stream: No such file or directory in /var/www/webpagetest/wptmonitor/wpt_functions.inc on line 1293
@@ -437,6 +461,7 @@ file { '/var/www/WPT-server-master/wptmonitor/QueueStatus.ini':
     mode => '0644',
     owner => 'www-data',
     group => 'www-data',
+    require => Exec [ 'unzipinstalljpvincentWPT-server' ]
 }
 
 # install pecl_http ... naff I know
@@ -463,11 +488,19 @@ file { '/etc/php5/conf.d/pecl_http.ini':
 # Error: exception 'PDOException' with message 'SQLSTATE[HY000] [14] unable to open database file' in
 # and smarty template errors
 # from http://www.webpagetest.org/forums/showthread.php?tid=628 
-file { [ '/var/www/WPT-server-master/wptmonitor/graph', '/var/www/WPT-server-master/wptmonitor/temp', '/var/www/WPT-server-master/wptmonitor/db', '/var/www/WPT-server-master/wptmonitor/templates_c' ]:
+file { [ '/var/www/WPT-server-master/wptmonitor/graph', '/var/www/WPT-server-master/wptmonitor/temp', '/var/www/WPT-server-master/wptmonitor/db', '/var/www/WPT-server-master/wptmonitor/templates_c', '/var/www/WPT-server-master/wptmonitor/graph/cache' ]:
      ensure => directory,
      owner => 'www-data',
      group => 'www-data',
      mode => '0775',
+     require => File [ '/etc/php5/conf.d/pecl_http.ini' ],
+}
+
+file { [ '/var/www/WPT-server-master/wptmonitor/graph/cache/.xml' ]:
+     ensure => file,
+     owner => 'www-data',
+     group => 'www-data',
+     mode => '0644',
      require => File [ '/etc/php5/conf.d/pecl_http.ini' ],
 }
 
