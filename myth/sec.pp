@@ -35,7 +35,7 @@ service { 'ssh':
 package { 'chkrootkit': }
 package { 'rkhunter': }
 package { 'ossec-hids-local': 
-    require => Exec [ 'addnicolasZinPrecisekey' ]
+    require => Exec [ 'aptGetUpdate' ]
 }
 package { 'apache2': }
 
@@ -43,7 +43,7 @@ package { 'apache2': }
 service { 'ossec-hids-local':
     ensure => 'running',
     enable => 'true',
-    require => Exec [ 'addnicolasZinPrecisekey' ],
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
 }
 
 # download ossec-wui checksum
@@ -92,7 +92,7 @@ file { '/etc/apache2/conf.d/ossec-wui-auth':
 # add www-data to ossec group
 user { 'www-data':
     groups => 'ossec',
-    require => Exec [ 'addnicolasZinPrecisekey' ],
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
 }
 
 # ensure the ossec-wui perms are correct
@@ -120,7 +120,7 @@ exec { 'untgzOssecWui':
     user => 'www-data',
     command => "/bin/tar -zxf /tmp/ossec-wui-${ossecWuiVersion}.tar.gz",
     unless => '/bin/ls -la /var/www/ossec-wui/index.php',
-    require => [ Exec [ 'addnicolasZinPrecisekey' ], User [ 'www-data' ], Exec [ 'wgetOssecWui' ], Package [ 'ossec-hids-local' ], Package [ 'apache2' ] ],
+    require => [ Exec [ 'aptGetUpdate' ], User [ 'www-data' ], Exec [ 'wgetOssecWui' ], Package [ 'ossec-hids-local' ], Package [ 'apache2' ] ],
 }
 
 # move the ossec-wui-version to ossec-wui ...
@@ -159,7 +159,6 @@ file { '/etc/apt/sources.list.d/nicolas-zin-precise.list':
     ensure => present,
     mode => '0644',
     content => "deb http://ppa.launchpad.net/nicolas-zin/ossec-ubuntu/ubuntu precise main\ndeb-src http://ppa.launchpad.net/nicolas-zin/ossec-ubuntu/ubuntu precise main\n",
-    require => Exec [ 'addnicolasZinPrecisekey' ]
 }
 
 # added the nicolas-zin key
@@ -170,6 +169,14 @@ exec { 'addnicolasZinPrecisekey':
     unless => '/usr/bin/apt-key list | /bin/grep 0C4FF926',
     require => File [ '/etc/apt/sources.list.d/nicolas-zin-precise.list' ],
 }
+
+# run apt-get after KeyInstall
+exec { "aptGetUpdate":
+    command => "/usr/bin/apt-get update",
+    onlyif => "/bin/sh -c '[ ! -f /var/cache/apt/pkgcache.bin ] || /usr/bin/find /etc/apt/* -cnewer /var/cache/apt/pkgcache.bin | /bin/grep . > /dev/null'",
+    require => Exec [ 'addnicolasZinPrecisekey'  ],
+}
+
 
 # create /var/log/chkrootkit/log.expected if it does not exist
 exec { '/var/log/chkrootkit/log.expected':
