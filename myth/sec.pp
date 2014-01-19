@@ -34,13 +34,16 @@ service { 'ssh':
 # add some packages
 package { 'chkrootkit': }
 package { 'rkhunter': }
-package { 'ossec-hids-local': }
+package { 'ossec-hids-local': 
+    require => Exec [ 'addnicolasZinPrecisekey' ]
+}
 package { 'apache2': }
 
 # config to restart ossec
 service { 'ossec-hids-local':
     ensure => 'running',
     enable => 'true',
+    require => Exec [ 'addnicolasZinPrecisekey' ],
 }
 
 # download ossec-wui checksum
@@ -89,6 +92,7 @@ file { '/etc/apache2/conf.d/ossec-wui-auth':
 # add www-data to ossec group
 user { 'www-data':
     groups => 'ossec',
+    require => Exec [ 'addnicolasZinPrecisekey' ],
 }
 
 # ensure the ossec-wui perms are correct
@@ -116,7 +120,7 @@ exec { 'untgzOssecWui':
     user => 'www-data',
     command => "/bin/tar -zxf /tmp/ossec-wui-${ossecWuiVersion}.tar.gz",
     unless => '/bin/ls -la /var/www/ossec-wui/index.php',
-    require => [ User [ 'www-data' ], Exec [ 'wgetOssecWui' ], Package [ 'ossec-hids-local' ], Package [ 'apache2' ] ],
+    require => [ Exec [ 'addnicolasZinPrecisekey' ], User [ 'www-data' ], Exec [ 'wgetOssecWui' ], Package [ 'ossec-hids-local' ], Package [ 'apache2' ] ],
 }
 
 # move the ossec-wui-version to ossec-wui ...
@@ -163,7 +167,8 @@ file { '/etc/apt/sources.list.d/nicolas-zin-precise.list':
 exec { 'addnicolasZinPrecisekey':
     logoutput => true,
     command => '/usr/bin/apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x66eb6ad20c4ff926',
-    unless => '/usr/bin/apt-key list | /bin/grep 0C4FF926'
+    unless => '/usr/bin/apt-key list | /bin/grep 0C4FF926',
+    require => File [ '/etc/apt/sources.list.d/nicolas-zin-precise.list' ],
 }
 
 # create /var/log/chkrootkit/log.expected if it does not exist
