@@ -197,7 +197,8 @@ exec { 'unpackAptCache':
     logoutput => true,
     cwd => '/var/cache/apt',
     command => '/bin/tar -xvf /home/myth/nfs/archives.tar',
-    unless => '/bin/ls /var/cache/apt/archives/libmyth-0.27-0_2%3a0.27.0+fixes.20131115.4ca9300-0ubuntu0mythbuntu2_amd64.deb' 
+    unless => '/bin/ls /var/cache/apt/archives/libmyth-0.27-0_2%3a0.27.0+fixes.20131115.4ca9300-0ubuntu0mythbuntu2_amd64.deb',
+    require => Mount [ '/home/myth/nfs' ],
 }
 
 # run apt-update
@@ -318,6 +319,24 @@ mount { '/var/lib/mythtv/videos':
     options => 'noatime,nodiratime,nfsvers=3,auto,intr,soft',
     atboot  => true,
     require => [ File[ '/var/lib/mythtv/videos' ], Host['qnap.webarmadillo.net']],
+}
+
+# create an nfs dir
+file { '/home/myth/nfs':
+    ensure => 'directory',
+    owner => 'myth',
+    group => 'myth',
+    mode => '2775',
+}
+
+# mount nfs dir
+mount { '/home/myth/nfs':
+    ensure  => 'mounted',
+    device  => 'qnap.webarmadillo.net:/greg',
+    fstype  => 'nfs',
+    options => 'noatime,nodiratime,nfsvers=3,auto,intr,soft',
+    atboot  => false,
+    require => [ File[ '/home/myth/nfs' ], Host['qnap.webarmadillo.net']],
 }
 
 # require the backups dir exists
@@ -567,8 +586,8 @@ file { '/etc/logrotate.d/compress':
 file { '/backups/scripts/grabCannonImages':
     ensure => present,
     require => Mount['/backups'],
-    mode => '0644',
-    content => "#!/bin/sh\n# check for rootness\n#if [ \"$UID\" != \"0\" ]; then\n#	echo \"You must be UID 0 (root) to run this! Hint: sudo\"\n#	# add something like this to /etv/sudoers\n#	# %mythtv ALL = NOPASSWD:/backup/scripts/grabCannonImages\n#	exit 1\n#fi\n# ok; go\n\necho \"running\" > /tmp/import\n# remove dir that has been made by myth\necho $1 > /tmp/mythdir\n\n#DIR to use\nDIR=/var/lib/mythtv/pictures/`date +%Y`/`date +%m`/`date +%d`/`date +%H%M`\necho \"putting stuff in $DIR\" >> /tmp/import\n# create dir + parents, do not moan if exists\nmkdir -p ${DIR}\n# move to dir\ncd ${DIR}\npwd\nchmod -R 775 ${DIR}\n# download images from camera\n/usr/bin/gphoto2 -P\nchmod 644 ${DIR}/*\nls -la\n\nexit 0"
+    mode => '0755',
+    content => "#!/bin/sh\n# check for rootness\n#if [ \"$UID\" != \"0\" ]; then\n#	echo \"You must be UID 0 (root) to run this! Hint: sudo\"\n#	# add something like this to /etv/sudoers\n#	# %mythtv ALL = NOPASSWD:/backup/scripts/grabCannonImages\n#	exit 1\n#fi\n# ok; go\n\necho \"running\" > /tmp/import\n# remove dir that has been made by myth\necho $1 > /tmp/mythdir\n\n#DIR to use\nDIR=/var/lib/mythtv/pictures/`date +%Y`/`date +%m`/`date +%d`/`date +%H%M`\necho \"putting stuff in \${DIR}\" >> /tmp/import\n# create dir + parents, do not moan if exists\nmkdir -p \${DIR}\n# move to dir\ncd \${DIR}\npwd\nchmod -R 775 \${DIR}\n# download images from camera\n/usr/bin/gphoto2 -P\nchmod 644 \${DIR}/*\nls -la\n\nexit 0"
 }
 
 # setup amixer
@@ -709,7 +728,8 @@ exec { 'untgzChannelIcons':
     cwd => '/home/mythtv/.mythtv/',
     user => mythtv,
     command => '/bin/tar -zxf /home/myth/nfs/puppet/channels.tar.gz',
-    creates => '/home/mythtv/.mythtv/channels/bbc_one.jpg'
+    creates => '/home/mythtv/.mythtv/channels/bbc_one.jpg',
+    require => Mount [ '/home/myth/nfs' ],
 }
 
 file { '/etc/ssh/ssh_host_rsa_key.pub':
@@ -735,7 +755,7 @@ file { '/home/myth/.bash_aliases':
     owner => 'myth',
     group => 'myth',
     mode => '0644',
-    content => 'alias update="/usr/bin/sudo apt-get update && /usr/bin/sudo apt-get upgrade; sudo /var/ossec/bin/agent_control -r -u 000; sync;sync;sync"',
+    content => 'alias update="/usr/bin/sudo apt-get update && /usr/bin/sudo apt-get upgrade; sudo /var/ossec/bin/agent_control -r -u 000; sudo /usr/bin/sudo rm /var/run/motd.mythtv-status sync;sync;sync"',
 }
 
 # aliase file
@@ -744,7 +764,7 @@ file { '/home/greg/.bash_aliases':
     owner => 'greg',
     group => 'greg',
     mode => '0644',
-    content => 'alias update="sudo apt-get update && sudo apt-get upgrade; sync;sync;sync"',
+    content => 'alias update="/usr/bin/sudo apt-get update && /usr/bin/sudo apt-get upgrade; sudo /var/ossec/bin/agent_control -r -u 000; sudo /usr/bin/sudo rm /var/run/motd.mythtv-status sync;sync;sync"',
 }
 
 # set the time, first install a package
