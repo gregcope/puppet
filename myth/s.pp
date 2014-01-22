@@ -1,5 +1,5 @@
 # set some defaults before we go...
-$mysqlPassword = ''
+# $mysqlpassword = ''
 
 # ensure apache installed/started
 service { 'apache2':
@@ -139,8 +139,8 @@ cron { 'mysql_backup':
 # Subscribe to changes to the cron change
 exec { 'createMysqlBackupUser':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'create user \"backup\"@\"localhost\" IDENTIFIED BY \"foobaz\"; GRANT SELECT, LOCK TABLES, EVENT on *.* to \"backup\"@\"localhost\";'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mysql.user WHERE user=\"backup\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'create user \"backup\"@\"localhost\" IDENTIFIED BY \"foobaz\"; GRANT SELECT, LOCK TABLES, EVENT on *.* to \"backup\"@\"localhost\";'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mysql.user WHERE user=\"backup\"' | /bin/grep 1",
     subscribe => Cron['mysql_backup'],
 }
 
@@ -755,7 +755,7 @@ file { '/home/myth/.bash_aliases':
     owner => 'myth',
     group => 'myth',
     mode => '0644',
-    content => 'alias update="/usr/bin/sudo apt-get update && /usr/bin/sudo apt-get upgrade; sudo /var/ossec/bin/agent_control -r -u 000; sudo /usr/bin/sudo rm /var/run/motd.mythtv-status sync;sync;sync"',
+    content => 'alias update="/usr/bin/sudo apt-get update && /usr/bin/sudo apt-get upgrade; /usr/bin/sudo /var/ossec/bin/agent_control -r -u 000; /usr/bin/sudo /usr/bin/sudo rm /var/run/motd.mythtv-status; sync;sync;sync"',
 }
 
 # aliase file

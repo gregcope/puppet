@@ -1,5 +1,6 @@
-# set some defaults before we go...
-$mysqlPassword = ''
+# You need to run this as 
+# sudo facter_mysqlpassword='PUT YOUR MYSQL PASS HERE' puppet apply s.pp
+
 
 # lets make sure we have 0.27 installed
 package { 'libmyth-0.27-0':
@@ -63,8 +64,8 @@ exec { 'amixermaster':
 # uses $hostname for the settings table
 # do this after 0.27 install
 exec { 'mythsetDefaultVideoPlaybackProfile':
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'UPDATE mythconverg.settings SET data=\"VDPAU Normal\" WHERE value=\"DefaultVideoPlaybackProfile\" AND hostname=\"$hostname\"'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"DefaultVideoPlaybackProfile\" AND data=\"VDPAU Normal\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'UPDATE mythconverg.settings SET data=\"VDPAU Normal\" WHERE value=\"DefaultVideoPlaybackProfile\" AND hostname=\"$hostname\"'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"DefaultVideoPlaybackProfile\" AND data=\"VDPAU Normal\"' | /bin/grep 1",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
@@ -72,8 +73,8 @@ exec { 'mythsetDefaultVideoPlaybackProfile':
 # uses $hostname for the settings table
 # do this after 0.27 install
 exec { 'mythsetAudioOutputDevice':
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'UPDATE mythconverg.settings SET data=\"ALSA:hdmi:CARD=NVidia,DEV=0\" WHERE value=\"AudioOutputDevice\" AND hostname=\"$hostname\"'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"AudioOutputDevice\" AND data=\"ALSA:hdmi:CARD=NVidia,DEV=0\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'UPDATE mythconverg.settings SET data=\"ALSA:hdmi:CARD=NVidia,DEV=0\" WHERE value=\"AudioOutputDevice\" AND hostname=\"$hostname\"'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"AudioOutputDevice\" AND data=\"ALSA:hdmi:CARD=NVidia,DEV=0\"' | /bin/grep 1",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
@@ -82,8 +83,8 @@ exec { 'mythsetAudioOutputDevice':
 # do this after 0.27 install
 exec { 'mythsetNetworkControlEnabled':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'UPDATE mythconverg.settings SET data=\"1\" WHERE value=\"NetworkControlEnabled\" AND hostname=\"$hostname\"'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"NetworkControlEnabled\" AND data=\"1\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'UPDATE mythconverg.settings SET data=\"1\" WHERE value=\"NetworkControlEnabled\" AND hostname=\"$hostname\"'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"NetworkControlEnabled\" AND data=\"1\"' | /bin/grep 1",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
@@ -92,8 +93,8 @@ exec { 'mythsetNetworkControlEnabled':
 # do this after 0.27 install
 exec { 'mythsetLanguage':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'UPDATE mythconverg.settings SET data=\"en_GB\" WHERE value=\"Language\" AND hostname=\"$hostname\"'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"Language\" AND data=\"en_GB\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'UPDATE mythconverg.settings SET data=\"en_GB\" WHERE value=\"Language\" AND hostname=\"$hostname\"'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"Language\" AND data=\"en_GB\"' | /bin/grep 1",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
@@ -102,8 +103,8 @@ exec { 'mythsetLanguage':
 # do this after 0.27 install
 exec { 'mythsetDateFormat':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'UPDATE mythconverg.settings SET data=\"ddd d MMM yyyy\" WHERE value=\"DateFormat\" AND hostname=\"$hostname\"'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"DateFormat\" AND data=\"ddd d MMM yyyy\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'UPDATE mythconverg.settings SET data=\"ddd d MMM yyyy\" WHERE value=\"DateFormat\" AND hostname=\"$hostname\"'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"DateFormat\" AND data=\"ddd d MMM yyyy\"' | /bin/grep 1",
     require => Package [ 'libmyth-0.27-0' ],
 }
 
@@ -112,8 +113,8 @@ exec { 'mythsetDateFormat':
 # do this after 0.27 install
 exec { 'mythsetShortDateFormat':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'UPDATE mythconverg.settings SET data=\"ddd d\" WHERE value=\"ShortDateFormat\" AND hostname=\"$hostname\"'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"ShortDateFormat\" AND data=\"ddd d\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'UPDATE mythconverg.settings SET data=\"ddd d\" WHERE value=\"ShortDateFormat\" AND hostname=\"$hostname\"'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"ShortDateFormat\" AND data=\"ddd d\"' | /bin/grep 1",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
@@ -122,8 +123,8 @@ exec { 'mythsetShortDateFormat':
 # do this after 0.27 install
 exec { 'mythsetTimeFormat':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'UPDATE mythconverg.settings SET data=\"hh:mm\" WHERE value=\"TimeFormat\" AND hostname=\"$hostname\"'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"TimeFormat\" AND data=\"hh:mm\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'UPDATE mythconverg.settings SET data=\"hh:mm\" WHERE value=\"TimeFormat\" AND hostname=\"$hostname\"'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"TimeFormat\" AND data=\"hh:mm\"' | /bin/grep 1",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
@@ -132,8 +133,8 @@ exec { 'mythsetTimeFormat':
 # do this after 0.27 install
 exec { 'mythsetMasterMixerVolume':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'UPDATE mythconverg.settings SET data=\"100\" WHERE value=\"MasterMixerVolume\" AND hostname=\"$hostname\"'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"MasterMixerVolume\" AND data=\"100\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'UPDATE mythconverg.settings SET data=\"100\" WHERE value=\"MasterMixerVolume\" AND hostname=\"$hostname\"'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"MasterMixerVolume\" AND data=\"100\"' | /bin/grep 1",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
@@ -142,8 +143,8 @@ exec { 'mythsetMasterMixerVolume':
 # do this after 0.27 install
 exec { 'mythsetPCMMixerVolume':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'UPDATE mythconverg.settings SET data=\"100\" WHERE value=\"PCMMixerVolume\" AND hostname=\"$hostname\"'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"PCMMixerVolume\" AND data=\"100\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'UPDATE mythconverg.settings SET data=\"100\" WHERE value=\"PCMMixerVolume\" AND hostname=\"$hostname\"'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"PCMMixerVolume\" AND data=\"100\"' | /bin/grep 1",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
@@ -152,8 +153,8 @@ exec { 'mythsetPCMMixerVolume':
 # do this after 0.27 install
 exec { 'mythsetLiveTVIdleTimeout':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'INSERT into mythconverg.settings (value,data,hostname) VALUES (\"LiveTVIdleTimeout\", \"120\", \"s\")'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"LiveTVIdleTimeout\" AND data=\"120\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'INSERT into mythconverg.settings (value,data,hostname) VALUES (\"LiveTVIdleTimeout\", \"120\", \"s\")'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"LiveTVIdleTimeout\" AND data=\"120\"' | /bin/grep 1",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
@@ -162,8 +163,8 @@ exec { 'mythsetLiveTVIdleTimeout':
 # do this after 0.27 install
 exec { 'mythsetPlaybackWatchList':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'UPDATE mythconverg.settings SET data=\"0\" WHERE value=\"PlaybackWatchList\" AND hostname=\"$hostname\"'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"PlaybackWatchList\" AND data=\"0\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'UPDATE mythconverg.settings SET data=\"0\" WHERE value=\"PlaybackWatchList\" AND hostname=\"$hostname\"'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"PlaybackWatchList\" AND data=\"0\"' | /bin/grep 1",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
@@ -172,8 +173,8 @@ exec { 'mythsetPlaybackWatchList':
 # do this after 0.27 install
 exec { 'mythsetMythArchiveDateFormat':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'UPDATE mythconverg.settings SET data=\"%a %d %b %Y\" WHERE value=\"MythArchiveDateFormat\" AND hostname=\"$hostname\"'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"MythArchiveDateFormat\" AND data=\"%a %d %b %Y\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'UPDATE mythconverg.settings SET data=\"%a %d %b %Y\" WHERE value=\"MythArchiveDateFormat\" AND hostname=\"$hostname\"'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"MythArchiveDateFormat\" AND data=\"%a %d %b %Y\"' | /bin/grep 1",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
@@ -182,8 +183,8 @@ exec { 'mythsetMythArchiveDateFormat':
 # do this after 0.27 install
 exec { 'mythsetMythArchiveTimeFormat':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'UPDATE mythconverg.settings SET data=\"%H:%M\" WHERE value=\"MythArchiveTimeFormat\" AND hostname=\"$hostname\"'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"MythArchiveTimeFormat\" AND data=\"%H:%M\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'UPDATE mythconverg.settings SET data=\"%H:%M\" WHERE value=\"MythArchiveTimeFormat\" AND hostname=\"$hostname\"'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname=\"$hostname\" AND value=\"MythArchiveTimeFormat\" AND data=\"%H:%M\"' | /bin/grep 1",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
@@ -191,8 +192,8 @@ exec { 'mythsetMythArchiveTimeFormat':
 # do this after 0.27 install
 exec { 'mythsetAutoExpireWatchedPriority':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'UPDATE mythconverg.settings SET data=\"1\" WHERE value=\"AutoExpireWatchedPriority\" AND hostname is NULL'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname is NULL AND value=\"AutoExpireWatchedPriority\" AND data=\"1\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'UPDATE mythconverg.settings SET data=\"1\" WHERE value=\"AutoExpireWatchedPriority\" AND hostname is NULL'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname is NULL AND value=\"AutoExpireWatchedPriority\" AND data=\"1\"' | /bin/grep 1",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
@@ -200,8 +201,8 @@ exec { 'mythsetAutoExpireWatchedPriority':
 # do this after 0.27 install
 exec { 'mythsetRecordPreRoll':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'UPDATE mythconverg.settings SET data=\"30\" WHERE value=\"RecordPreRoll\" AND hostname is NULL'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname is NULL AND value=\"RecordPreRoll\" AND data=\"30\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'UPDATE mythconverg.settings SET data=\"30\" WHERE value=\"RecordPreRoll\" AND hostname is NULL'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname is NULL AND value=\"RecordPreRoll\" AND data=\"30\"' | /bin/grep 1",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
@@ -209,8 +210,8 @@ exec { 'mythsetRecordPreRoll':
 # do this after 0.27 install
 exec { 'mythsetRecordOverTime':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'UPDATE mythconverg.settings SET data=\"120\" WHERE value=\"RecordOverTime\" AND hostname is NULL'",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.settings where hostname is NULL AND value=\"RecordOverTime\" AND data=\"120\"' | /bin/grep 1",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'UPDATE mythconverg.settings SET data=\"120\" WHERE value=\"RecordOverTime\" AND hostname is NULL'",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.settings where hostname is NULL AND value=\"RecordOverTime\" AND data=\"120\"' | /bin/grep 1",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
@@ -221,8 +222,8 @@ exec { 'mythsetRecordOverTime':
 # do this after 0.27 install
 exec { 'importMythconvergeSQL':
     logoutput => true,
-    command => "/usr/bin/mysql -uroot -p$mysqlPassword mythconverg < /home/myth/nfs/mythconverg.sql",
-    unless => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'select count(*) from mythconverg.channel' | /bin/grep 55",
+    command => "/usr/bin/mysql -uroot -p$mysqlpassword mythconverg < /home/myth/nfs/mythconverg.sql",
+    unless => "/usr/bin/mysql -uroot -p$mysqlpassword -e 'select count(*) from mythconverg.channel' | /bin/grep 55",
     require => Exec [ 'restartmythtvbackend' ],
 }
 
