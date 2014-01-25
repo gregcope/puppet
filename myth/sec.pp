@@ -1,5 +1,6 @@
 $ossecWuiVersion='0.8'
 $arachniVersion="0.4.5.2-0.4.2.1"
+$ossecsha1sum=c6e161ceba88c902f6b69c3e76d98ec8c0923c6f
 #lsbdistcodename facter for precise
 #fqdn is facter for full hostname
 
@@ -194,7 +195,6 @@ exec { '/var/log/chkrootkit/log.expected':
     require => File [ '/etc/chkrootkit.conf' ],
 }
 
-
 # update ossec email_to in /var/ossec/etc/ossec.conf
 # from <email_to>daniel.cid@xxx.com</email_to>
 # to <email_to>root@localhost</email_to>
@@ -203,7 +203,7 @@ exec { 'updateOssecEmail':
     logoutput => true,
     unless => '/bin/grep "<email_to>root@localhost</email_to>" /var/ossec/etc/ossec.conf',
     command => '/usr/bin/perl -p -i -e "s/<email_to>.*<\/email_to>/<email_to>root\@localhost<\/email_to>/" /var/ossec/etc/ossec.conf',
-    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'wgetOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
 
@@ -215,7 +215,7 @@ exec { 'updateOssecsmtp':
     logoutput => true,
     unless => '/bin/grep "<smtp_server>localhost</smtp_server>" /var/ossec/etc/ossec.conf',
     command => '/usr/bin/perl -p -i -e "s/<smtp_server>.*<\/smtp_server>/<smtp_server>localhost<\/smtp_server>/" /var/ossec/etc/ossec.conf',
-    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'wgetOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
 
@@ -227,24 +227,25 @@ exec { 'updateOssecemailfrom':
     logoutput => true,
     unless => "/bin/grep '<email_from>oosec@$fqdn</email_from>' /var/ossec/etc/ossec.conf",
     command => "/usr/bin/perl -p -i -e 's/<email_from>.*<\/email_from>/<email_from>oosec\@$fqdn<\/email_from>/' /var/ossec/etc/ossec.conf",
-    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'wgetOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
-
-
-
-#<directories check_all=”yes” realtime=”yes” report_changes=”yes”>/var/ossec</directories>
-
-#Now, because certain directories change frequently, you’ll need some exclusions:
-
-#<ignore>/var/ossec/queue</ignore>
-#<ignore>/var/ossec/logs</ignore>
-#<ignore>/var/ossec/stats</ignore>
-#<ignore>/var/ossec/var</ignore>
-
 
 file { '/etc/cron.daily/ossecStats.sh':
     ensure => file,
     mode => '0755',
     content => "#!/bin/bash\n\necho Ossec daily stats for `/bin/hostname --fqdn` on `/bin/date`\necho \"\n\"\n#Reset counters\nCOUNT=0\nEPSSUM=0\nEPSAVG=0\n#Source OSSEC Dir\n. /etc/ossec-init.conf\n\nfor i in \$(grep 'Total events for day' \${DIRECTORY}/stats/totals/*/*/ossec-totals-*.log | cut -d: -f3); do\n\tCOUNT=\$((COUNT+1))\n\tDAILYEVENTS=\$i\n\tEPSSUM=\$((\$DAILYEVENTS+\$EPSSUM))\ndone\n\nEPSAVG=`echo \"scale=3; \$EPSSUM/\$COUNT/86400\" | /usr/bin/bc -l`\n\necho Ossec total lifetime number of events colected is: \$EPSSUM\necho Ossec total daily number of events average is: \$((\$EPSSUM/\$COUNT))\necho Ossec daily events per second average is: \$EPSAVG\n",
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
+}
+
+# download and install https://github.com/gregcope/stuff/raw/master/myth/ossec.conf
+# make a backup and make sure the perms are correct
+# unless the sha1sum is cosher
+exec { 'wgetOssec.conf':
+    logoutput => true,
+    cwd => '/var/ossec/etc',
+    command => '/bin/mv /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.org && /usr/bin/wget https://github.com/gregcope/stuff/raw/master/myth/ossec.conf && chmod 400 /var/ossec/etc/ossec.conf',
+    unless => "/usr/bin/sha1sum /var/ossec/etc/ossec.conf | /bin/grep $ossecsha1sum",
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
+    notify => Service [ 'ossec-hids-local' ],
 }
