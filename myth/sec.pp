@@ -1,5 +1,6 @@
 $ossecWuiVersion='0.8'
 $arachniVersion="0.4.5.2-0.4.2.1"
+$httphostname='www.webarmadillo.net'
 # you will need to change this after the first run, as it is specific to my install (hostname gets changed...)
 $ossecsha1sum=fx41f5840fa127f0041ad102b32e1b1fa4f77ff85
 #lsbdistcodename facter for precise
