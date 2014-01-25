@@ -1,7 +1,7 @@
 $ossecWuiVersion='0.8'
 $arachniVersion="0.4.5.2-0.4.2.1"
 # you will need to change this after the first run, as it is specific to my install (hostname gets changed...)
-$ossecsha1sum=f41f5840fa127f0041ad102b32e1b1fa4f77ff85
+$ossecsha1sum=fx41f5840fa127f0041ad102b32e1b1fa4f77ff85
 #lsbdistcodename facter for precise
 #fqdn is facter for full hostname
 
@@ -246,5 +246,15 @@ exec { 'wgetOssec.conf':
     command => '/bin/mv /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.org && /usr/bin/wget https://github.com/gregcope/stuff/raw/master/myth/ossec.conf && chmod 400 /var/ossec/etc/ossec.conf',
     unless => "/usr/bin/sha1sum /var/ossec/etc/ossec.conf | /bin/grep $ossecsha1sum",
     require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
+    notify => Service [ 'ossec-hids-local' ],
+}
+
+# change httphostname in /var/ossec/etc/ossec.conf
+# to monitor the website and DNS
+exec { 'changehttphostnameOssec':
+    logoutput => true,
+    unless => "/bin/grep -v 'httphostname' /var/ossec/etc/ossec.conf",
+    command => "/usr/bin/perl -p -i -e 's/httphostname/\$httphostnam/g' /var/ossec/etc/ossec.conf",
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'wgetOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
