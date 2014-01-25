@@ -7,13 +7,7 @@ $ossecsha1sum=78530ae316823c269bc830493953da803f7263c7
 # to do
 # done: 
 # tune ossec (local users)
-# adddns (util.sh) monitoring for domains (www/s.webarmadillo.net)
 # monitor itself http://www.immutablesecurity.com/index.php/tag/ossec/page/2/
-#
-# todo:
-# monitor ossec with zabbix - stats from http://www.immutablesecurity.com/index.php/tag/ossec/page/2/
-# http://www.thefanclub.co.za/how-to/how-install-apache2-modsecurity-and-modevasive-ubuntu-1204-lts-server mod security?
-#
 # monitor these ubuntu files
 # — /var/log/messages
 # — /var/log/auth.log
@@ -21,6 +15,10 @@ $ossecsha1sum=78530ae316823c269bc830493953da803f7263c7
 # — /var/log/mail.info
 # — /var/log/dpkg.log
 #
+# todo:
+# monitor ossec with zabbix - stats from http://www.immutablesecurity.com/index.php/tag/ossec/page/2/
+# http://www.thefanclub.co.za/how-to/how-install-apache2-modsecurity-and-modevasive-ubuntu-1204-lts-server mod security?
+# adddns (util.sh) monitoring for domains (www/s.webarmadillo.net)
 #
 # referances:
 # http://www.security-marathon.be/?p=951
@@ -226,7 +224,7 @@ exec { 'updateOssecsmtp':
 exec { 'updateOssecemailfrom':
     logoutput => true,
     unless => "/bin/grep '<email_from>oosec@$fqdn</email_from>' /var/ossec/etc/ossec.conf",
-    command => "/usr/bin/perl -p -i -e 's/<email_from>.*<\/email_from>/<email_from>oosec\@$fqdn<\/email_from>/' /var/ossec/etc/ossec.conf",
+    command => "/usr/bin/perl -p -i -e 's/<email_from>.*<\/email_from>/<email_from>ossec\@$fqdn<\/email_from>/' /var/ossec/etc/ossec.conf",
     require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'wgetOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
