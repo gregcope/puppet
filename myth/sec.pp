@@ -196,7 +196,7 @@ exec { '/var/log/chkrootkit/log.expected':
 # update ossec email_to in /var/ossec/etc/ossec.conf
 # from <email_to>daniel.cid@xxx.com</email_to>
 # to <email_to>root@localhost</email_to>
-# requires oosec install
+# requires ossec install
 exec { 'updateOssecEmail':
     logoutput => true,
     unless => '/bin/grep "<email_to>root@localhost</email_to>" /var/ossec/etc/ossec.conf',
@@ -208,7 +208,7 @@ exec { 'updateOssecEmail':
 # update ossec smtp server in /var/ossec/etc/ossec.conf
 # from <smtp_server>smtp.xxx.com.</smtp_server>
 # to <smtp_server>localhost</smtp_server>
-# requires oosec install
+# requires ossec install
 exec { 'updateOssecsmtp':
     logoutput => true,
     unless => '/bin/grep "<smtp_server>localhost</smtp_server>" /var/ossec/etc/ossec.conf',
@@ -219,11 +219,11 @@ exec { 'updateOssecsmtp':
 
 # update ossec email from in /var/ossec/etc/ossec.conf
 # from <email_from>ossecm@ossec.xxx.com.</email_from>
-# to <email_from>oosec@$fqdn</email_from>
-# requires oosec install
+# to <email_from>ossec@$fqdn</email_from>
+# requires ossec install
 exec { 'updateOssecemailfrom':
     logoutput => true,
-    unless => "/bin/grep '<email_from>oosec@$fqdn</email_from>' /var/ossec/etc/ossec.conf",
+    unless => "/bin/grep '<email_from>ossec@$fqdn</email_from>' /var/ossec/etc/ossec.conf",
     command => "/usr/bin/perl -p -i -e 's/<email_from>.*<\/email_from>/<email_from>ossec\@$fqdn<\/email_from>/' /var/ossec/etc/ossec.conf",
     require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'wgetOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
