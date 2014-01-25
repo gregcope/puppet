@@ -1,6 +1,6 @@
 $ossecWuiVersion='0.8'
 $arachniVersion="0.4.5.2-0.4.2.1"
-$ossecsha1sum=c6e161ceba88c902f6b69c3e76d98ec8c0923c6f
+$ossecsha1sum=78530ae316823c269bc830493953da803f7263c7
 #lsbdistcodename facter for precise
 #fqdn is facter for full hostname
 
