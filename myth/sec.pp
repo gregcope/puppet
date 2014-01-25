@@ -13,6 +13,14 @@ $arachniVersion="0.4.5.2-0.4.2.1"
 # monitor ossec with zabbix - stats from http://www.immutablesecurity.com/index.php/tag/ossec/page/2/
 # http://www.thefanclub.co.za/how-to/how-install-apache2-modsecurity-and-modevasive-ubuntu-1204-lts-server mod security?
 #
+# monitor these ubuntu files
+# — /var/log/messages
+# — /var/log/auth.log
+# — /var/log/syslog
+# — /var/log/mail.info
+# — /var/log/dpkg.log
+#
+#
 # referances:
 # http://www.security-marathon.be/?p=951
 # https://github.com/nzin/puppet-ossec/blob/master/templates/10_ossec.conf.erb
@@ -184,4 +192,59 @@ exec { '/var/log/chkrootkit/log.expected':
     unless => '/bin/ls /var/log/chkrootkit/log.expected',
     command => '/etc/cron.daily/chkrootkit && /bin/cp -a /var/log/chkrootkit/log.today /var/log/chkrootkit/log.expected',
     require => File [ '/etc/chkrootkit.conf' ],
+}
+
+
+# update ossec email_to in /var/ossec/etc/ossec.conf
+# from <email_to>daniel.cid@xxx.com</email_to>
+# to <email_to>root@localhost</email_to>
+# requires oosec install
+exec { 'updateOssecEmail':
+    logoutput => true,
+    unless => '/bin/grep "<email_to>root@localhost</email_to>" /var/ossec/etc/ossec.conf',
+    command => '/usr/bin/perl -p -i -e "s/<email_to>.*<\/email_to>/<email_to>root\@localhost<\/email_to>/" /var/ossec/etc/ossec.conf',
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
+    notify => Service [ 'ossec-hids-local' ],
+}
+
+# update ossec smtp server in /var/ossec/etc/ossec.conf
+# from <smtp_server>smtp.xxx.com.</smtp_server>
+# to <smtp_server>localhost</smtp_server>
+# requires oosec install
+exec { 'updateOssecsmtp':
+    logoutput => true,
+    unless => '/bin/grep "<smtp_server>localhost</smtp_server>" /var/ossec/etc/ossec.conf',
+    command => '/usr/bin/perl -p -i -e "s/<smtp_server>.*<\/smtp_server>/<smtp_server>localhost<\/smtp_server>/" /var/ossec/etc/ossec.conf',
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
+    notify => Service [ 'ossec-hids-local' ],
+}
+
+# update ossec email from in /var/ossec/etc/ossec.conf
+# from <email_from>ossecm@ossec.xxx.com.</email_from>
+# to <email_from>oosec@$fqdn</email_from>
+# requires oosec install
+exec { 'updateOssecemailfrom':
+    logoutput => true,
+    unless => "/bin/grep '<email_from>oosec@$fqdn</email_from>' /var/ossec/etc/ossec.conf",
+    command => "/usr/bin/perl -p -i -e 's/<email_from>.*<\/email_from>/<email_from>oosec\@$fqdn<\/email_from>/' /var/ossec/etc/ossec.conf",
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
+    notify => Service [ 'ossec-hids-local' ],
+}
+
+
+
+#<directories check_all=”yes” realtime=”yes” report_changes=”yes”>/var/ossec</directories>
+
+#Now, because certain directories change frequently, you’ll need some exclusions:
+
+#<ignore>/var/ossec/queue</ignore>
+#<ignore>/var/ossec/logs</ignore>
+#<ignore>/var/ossec/stats</ignore>
+#<ignore>/var/ossec/var</ignore>
+
+
+file { '/etc/cron.daily/ossecStats.sh':
+    ensure => file,
+    mode => '0755',
+    content => "#!/bin/bash\n\necho Ossec daily stats for `/bin/hostname --fqdn` on `/bin/date`\necho \"\n\"\n#Reset counters\nCOUNT=0\nEPSSUM=0\nEPSAVG=0\n#Source OSSEC Dir\n. /etc/ossec-init.conf\n\nfor i in \$(grep 'Total events for day' \${DIRECTORY}/stats/totals/*/*/ossec-totals-*.log | cut -d: -f3); do\n\tCOUNT=\$((COUNT+1))\n\tDAILYEVENTS=\$i\n\tEPSSUM=\$((\$DAILYEVENTS+\$EPSSUM))\ndone\n\nEPSAVG=`echo \"scale=3; \$EPSSUM/\$COUNT/86400\" | /usr/bin/bc -l`\n\necho Ossec total lifetime number of events colected is: \$EPSSUM\necho Ossec total daily number of events average is: \$((\$EPSSUM/\$COUNT))\necho Ossec daily events per second average is: \$EPSAVG\n",
 }
