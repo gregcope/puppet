@@ -1,12 +1,12 @@
 $ossecWuiVersion='0.8'
 $arachniVersion="0.4.5.2-0.4.2.1"
 $httphostname='www.webarmadillo.net'
-# you will need to change this after the first run, as it is specific to my install (hostname gets changed...)
-$ossecsha1sum=fx41f5840fa127f0041ad102b32e1b1fa4f77ff85
+$dnstld='webarmadillo.net'
+$ossecsha1sum=1f813e057d8726a0f0db3a712f87d2db6973551b
+
 #lsbdistcodename facter for precise
 #fqdn is facter for full hostname
 
-# to do
 # done: 
 # tune ossec (local users)
 # monitor itself http://www.immutablesecurity.com/index.php/tag/ossec/page/2/
@@ -16,15 +16,19 @@ $ossecsha1sum=fx41f5840fa127f0041ad102b32e1b1fa4f77ff85
 # — /var/log/syslog
 # — /var/log/mail.info
 # — /var/log/dpkg.log
+# adddns (util.sh) monitoring for domains (www.webarmadillo.net)
+# adddns (util.sh) monitoring for domains (webarmadillo.net)
+# addsite (util.sh) monitoring for domains (www.webarmadillo.net)
 #
 # todo:
 # monitor ossec with zabbix - stats from http://www.immutablesecurity.com/index.php/tag/ossec/page/2/
 # http://www.thefanclub.co.za/how-to/how-install-apache2-modsecurity-and-modevasive-ubuntu-1204-lts-server mod security?
-# adddns (util.sh) monitoring for domains (www/s.webarmadillo.net)
 #
 # referances:
 # http://www.security-marathon.be/?p=951
 # https://github.com/nzin/puppet-ossec/blob/master/templates/10_ossec.conf.erb
+# http://dcid.me/blog/2011/10/3woo-alerting-on-dns-ip-address-changes/
+#
 
 # ensure root cannot login directly
 augeas { '/etc/ssh/sshd_config':
@@ -244,18 +248,37 @@ file { '/etc/cron.daily/ossecStats.sh':
 exec { 'wgetOssec.conf':
     logoutput => true,
     cwd => '/var/ossec/etc',
-    command => '/bin/mv /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.org && /usr/bin/wget https://github.com/gregcope/stuff/raw/master/myth/ossec.conf && chmod 400 /var/ossec/etc/ossec.conf',
-    unless => "/usr/bin/sha1sum /var/ossec/etc/ossec.conf | /bin/grep $ossecsha1sum",
+    command => '/bin/mv /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.`date +%Y%m%dT%H%M%S` && /usr/bin/wget https://github.com/gregcope/stuff/raw/master/myth/ossec-ubuntu.conf && cp /var/ossec/etc/ossec-ubuntu.conf /var/ossec/etc/ossec.conf && chmod 400 /var/ossec/etc/ossec.conf',
+    unless => "/usr/bin/sha1sum /var/ossec/etc/ossec-ubuntu.conf | /bin/grep $ossecsha1sum",
     require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
 
-# change httphostname in /var/ossec/etc/ossec.conf
-# to monitor the website and DNS
-exec { 'changehttphostnameOssec':
+# Add DNS check for webarmadillo.net
+# Unless this is in the config <command>host -W 5 -t NS webarmadillo.net; host -W 5 -t A webarmadillo.net | sort</command>
+exec { 'ossecDNScheckfortld':
     logoutput => true,
-    unless => "/bin/grep -v 'httphostname' /var/ossec/etc/ossec.conf",
-    command => "/usr/bin/perl -p -i -e 's/httphostname/\$httphostnam/g' /var/ossec/etc/ossec.conf",
+    unless => "/bin/grep '<command>host -W 5 -t NS $dnstld; host -W 5 -t A $dnstld | sort</command>' /var/ossec/etc/ossec.conf",
+    command => "/var/ossec/bin/util.sh adddns $dnstld",
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'wgetOssec.conf' ] ],
+    notify => Service [ 'ossec-hids-local' ],
+}
+
+# Add DNS check for www.webarmadillo.net
+# Unless this is in the config <command>host -W 5 -t NS www.webarmadillo.net; host -W 5 -t A www.webarmadillo.net | sort</command>
+exec { 'ossecDNScheckforwww':
+    logoutput => true,
+    unless => "/bin/grep '<command>host -W 5 -t NS $httphostname; host -W 5 -t A $httphostname | sort</command>' /var/ossec/etc/ossec.conf",
+    command => "/var/ossec/bin/util.sh adddns $httphostname",
+    notify => Service [ 'ossec-hids-local' ],
+}
+
+# Add web check for www.webarmadillo.net
+# unless this is in the config <command>lynx --connect_timeout 10 --dump www.webarmadillo.net | head -n 10</command>
+exec { 'ossecWEBcheckforwww':
+    logoutput => true,
+    unless => "/bin/grep '<command>lynx --connect_timeout 10 --dump $httphostname | head -n 10</command>' /var/ossec/etc/ossec.conf",
+    command => "/var/ossec/bin/util.sh addsite $httphostname",
     require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'wgetOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
