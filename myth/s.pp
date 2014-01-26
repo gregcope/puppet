@@ -197,7 +197,7 @@ exec { 'unpackAptCache':
     logoutput => true,
     cwd => '/var/cache/apt',
     command => '/bin/tar -xvf /home/myth/nfs/archives.tar',
-    unless => '/bin/ls /var/cache/apt/archives/libmyth-0.27-0_2%3a0.27.0+fixes.20131115.4ca9300-0ubuntu0mythbuntu2_amd64.deb',
+    unless => '/bin/ls /var/cache/apt/archives/libmyth-0.27*',
     require => Mount [ '/home/myth/nfs' ],
 }
 
@@ -755,7 +755,7 @@ file { '/home/myth/.bash_aliases':
     owner => 'myth',
     group => 'myth',
     mode => '0644',
-    content => 'alias update="/usr/bin/sudo apt-get update && /usr/bin/sudo apt-get upgrade; /usr/bin/sudo /var/ossec/bin/agent_control -r -u 000; /usr/bin/sudo /usr/bin/sudo rm /var/run/motd.mythtv-status; sync;sync;sync"',
+    content => 'alias update="/usr/bin/sudo apt-get update && /usr/bin/sudo apt-get upgrade; /usr/bin/sudo /var/ossec/bin/agent_control -r -u 000; /usr/bin/sudo /usr/bin/sudo rm -f /var/run/motd.mythtv-status; sync;sync;sync"',
 }
 
 # aliase file
@@ -764,7 +764,7 @@ file { '/home/greg/.bash_aliases':
     owner => 'greg',
     group => 'greg',
     mode => '0644',
-    content => 'alias update="/usr/bin/sudo apt-get update && /usr/bin/sudo apt-get upgrade; sudo /var/ossec/bin/agent_control -r -u 000; sudo /usr/bin/sudo rm /var/run/motd.mythtv-status sync;sync;sync"',
+    content => 'alias update="/usr/bin/sudo apt-get update && /usr/bin/sudo apt-get upgrade; /usr/bin/sudo /var/ossec/bin/agent_control -r -u 000; sudo /usr/bin/sudo rm -f /var/run/motd.mythtv-status sync;sync;sync"',
 }
 
 # set the time, first install a package
