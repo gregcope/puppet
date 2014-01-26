@@ -146,6 +146,14 @@ exec { 'mvOssecWui':
     notify => Service [ 'apache2' ],
 }
 
+# set Apache ServerTokens Prod
+exec { 'apacheServerTokens':
+    logoutput => true,
+    unless => '/bin/grep "ServerTokens Prod" /etc/apache2/conf.d/security',
+    command => '/usr/bin/perl -p -i -e "s/^ServerTokens.*$/ServerTokens Prod/" /etc/apache2/conf.d/security',
+    notify => Service [ 'apache2' ],
+}
+
 # apache service restart config
 service { 'apache2':
     ensure => 'running',
