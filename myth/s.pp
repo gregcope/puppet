@@ -382,6 +382,7 @@ mount { '/var/lib/mythtv/pictures':
 # install some packages :-)
 package { 'apache2': }
 package { 'zip': }
+package { 'apticron': }
 package { 'vim': ensure => 'installed'}
 package { 'sysstat': }
 package { 'iotop': }
