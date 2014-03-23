@@ -1,6 +1,7 @@
 # set some defaults before we go...
 # $mysqlpassword = ''
-$nfsOptions='bg,actimeo=1800,noatime,nodiratime,nfsvers=3,auto,intr,soft'
+# http://serverfault.com/questions/135030/ubuntu-hangs-on-boot-when-nfs-mounting-entries-in-etc-fstab-but-they-mount-cle
+$nfsOptions='_netdev,bg,actimeo=1800,noatime,nodiratime,nfsvers=3,auto,intr,soft'
 
 # ensure apache installed/started
 service { 'apache2':
