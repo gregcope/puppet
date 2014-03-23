@@ -1,5 +1,6 @@
 # set some defaults before we go...
 # $mysqlpassword = ''
+$nfsOptions='bg,actimeo=1800,noatime,nodiratime,nfsvers=3,auto,intr,soft'
 
 # ensure apache installed/started
 service { 'apache2':
@@ -312,11 +313,12 @@ file { '/var/lib/mythtv/videos':
 
 # make videos and NFS mount
 # require the dir, and that the host file entry exists
+# https://www.digitalocean.com/community/articles/how-to-set-up-an-nfs-mount-on-ubuntu-12-04
 mount { '/var/lib/mythtv/videos':
     ensure  => 'mounted',
     device  => 'qnap.webarmadillo.net:/videos',
     fstype  => 'nfs',
-    options => 'noatime,nodiratime,nfsvers=3,auto,intr,soft',
+    options => $nfsOptions,
     atboot  => true,
     require => [ File[ '/var/lib/mythtv/videos' ], Host['qnap.webarmadillo.net']],
 }
@@ -334,7 +336,7 @@ mount { '/home/myth/nfs':
     ensure  => 'mounted',
     device  => 'qnap.webarmadillo.net:/greg',
     fstype  => 'nfs',
-    options => 'noatime,nodiratime,nfsvers=3,auto,intr,soft',
+    options => $nfsOptions,
     atboot  => false,
     require => [ File[ '/home/myth/nfs' ], Host['qnap.webarmadillo.net']],
 }
@@ -353,7 +355,7 @@ mount { '/backups':
     ensure  => 'mounted',
     device  => 'qnap.webarmadillo.net:/backups',
     fstype  => 'nfs',
-    options => 'noatime,nodiratime,nfsvers=3,auto,intr,soft',
+    options => $nfsOptions,
     atboot  => true,
     require => [ File[ '/backups' ], Host['qnap.webarmadillo.net']],
 }
@@ -372,7 +374,7 @@ mount { '/var/lib/mythtv/pictures':
     ensure  => 'mounted',
     device  => 'qnap.webarmadillo.net:/pictures',
     fstype  => 'nfs',
-    options => 'noatime,nodiratime,nfsvers=3,auto,intr,soft',
+    options => $nfsOptions,
     atboot  => true,
     require => [ File[ '/var/lib/mythtv/pictures' ], Host['qnap.webarmadillo.net']],
 }
