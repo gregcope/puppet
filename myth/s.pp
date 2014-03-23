@@ -421,6 +421,23 @@ package { 'isc-dhcp-common': ensure => 'absent' }
 package { 'update-notifier': ensure => 'absent' }
 package { 'update-notifier-common': ensure => 'absent' }
 
+# disable graphical boot so I can see what is wrong
+# sudo augtool print /files/etc/default/grub/GRUB_CMDLINE_LINUX_DEFAULT 
+augeas { 'grub':
+    context => '/files/etc/default/grub',
+    require => Package['augeas-tools'],
+    changes => 'set GRUB_CMDLINE_LINUX_DEFAULT "text"',
+    notify => Exec [ 'update-grub' ],
+}
+
+# run update grub for changes to grub GRUB_CMDLINE_LINUX_DEFAULT
+# but only if called (refreshonly)
+exec { 'update-grub':
+    logoutput => true,
+    refreshonly => true,
+    command => '/usr/sbin/update-grub',
+}
+
 # Allow mail relay from the LAN
 # disable vfty for postfix
 augeas { 'postfix-main.cf':
