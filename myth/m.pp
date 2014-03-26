@@ -7,8 +7,6 @@ package { 'libmyth-0.27-0':
     ensure => installed,
 }
 
-package {'mythtv-status': }
-
 # and that the service has upgraded to 0.27
 # restart mythbackend
 exec { 'restartmythtvbackend':
