@@ -438,6 +438,13 @@ package { 'libdvdread4': }
 package { 'libc-bin': }
 package { 'puppet-lint': }
 
+#
+# install mod_fcgid for spdy/php 
+# https://developers.google.com/speed/spdy/mod_spdy/php
+package { 'libapache2-mod-fcgid': }
+package { 'php5-cgi': }
+package { 'php5': }
+
 # make sure some are removed!
 package { 'heirloom-mailx': ensure => 'absent' }
 package { 'xscreensaver': ensure => 'absent' }
