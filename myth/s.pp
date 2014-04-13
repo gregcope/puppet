@@ -3,6 +3,32 @@
 # http://serverfault.com/questions/135030/ubuntu-hangs-on-boot-when-nfs-mounting-entries-in-etc-fstab-but-they-mount-cle
 $nfsOptions='_netdev,bg,actimeo=1800,noatime,nodiratime,nfsvers=3,auto,intr,soft'
 
+# config smartmontools to start
+# sudo augtool print /files/etc/default/smartmontools/start_smartd
+augeas { 'smartmontools':
+    context => '/files/etc/default/smartmontools',
+    require => Package['augeas-tools'],
+    changes => 'set start_smartd yes',
+    notify => Service [ 'smartmontools' ],
+}
+
+# /dev/sda -a -d sat -o on -S on -s (S/../.././03|L/../../6/03) -m root -M exec /usr/share/smartmontools/smartd-runner
+
+#exec { 'smartd.conf':
+#    logoutput => true,
+#    command => '/usr/bin/perl -p -i -e "s/^SSLProtocol.*/SSLProtocol -ALL +SSLv3 +TLSv1/" /etc/apache2/mods-enable    d/ssl.conf',
+#    unless =>  '/bin/grep \'^SSLProtocol -ALL +SSLv3 +TLSv1\' /etc/apache2/mods-enabled/ssl.conf',
+#    notify => Service [ 'smartmontools' ],
+#}
+
+# ensure smartmontools is running
+service { 'smartmontools':
+    ensure => running,
+    hasstatus => true,
+    hasrestart => true,
+    require => Package['smartmontools'],
+}
+
 # ensure apache installed/started
 service { 'apache2':
     ensure => running,
@@ -401,7 +427,7 @@ package { 'vim-puppet': }
 package { 'bsd-mailx': }
 package { 'nfs-common': }
 package { 'gphoto2': }
-package { 'nvidia-319-updates': }
+package { 'nvidia-331-updates': }
 package { 'gnome-menus': }
 package { 'dkms': }
 package { 'desktop-file-utils': }
@@ -423,20 +449,20 @@ package { 'update-notifier-common': ensure => 'absent' }
 
 # disable graphical boot so I can see what is wrong
 # sudo augtool print /files/etc/default/grub/GRUB_CMDLINE_LINUX_DEFAULT 
-augeas { 'grub':
-    context => '/files/etc/default/grub',
-    require => Package['augeas-tools'],
-    changes => 'set GRUB_CMDLINE_LINUX_DEFAULT "text"',
-    notify => Exec [ 'update-grub' ],
-}
+#augeas { 'grub':
+#    context => '/files/etc/default/grub',
+#    require => Package['augeas-tools'],
+#    changes => 'set GRUB_CMDLINE_LINUX_DEFAULT "text"',
+#    notify => Exec [ 'update-grub' ],
+#}
 
 # run update grub for changes to grub GRUB_CMDLINE_LINUX_DEFAULT
 # but only if called (refreshonly)
-exec { 'update-grub':
-    logoutput => true,
-    refreshonly => true,
-    command => '/usr/sbin/update-grub',
-}
+#exec { 'update-grub':
+#    logoutput => true,
+#    refreshonly => true,
+#    command => '/usr/sbin/update-grub',
+#}
 
 # Allow mail relay from the LAN
 # disable vfty for postfix
@@ -770,13 +796,15 @@ file { '/etc/ssh/ssh_host_rsa_key':
     content => "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA4OXvgapSA0NWb/da5tiZSg0DJOEvokscKUn6VTCnOT8VHm0C\nPl37yYpOq79sGsKMRfSkvIv2qIOFFDLn13g9bKETZFLzr/LYAATQtq4dLqKI7lQ4\nO3CCmk1XAic3llhIccSp3I22LsF6BsO5wiuRmpmLLaxZzZz2E69Gv8DYpKp+qCr4\ngLRZ9pcUcnKl3QdhYI2ZNhjnSWNOxkInmCzfgKvpdMS/k1qDzhMRQr6WyPeRd0On\nwJHgmJLz5moFJUAYldnUZX2RHASjbNQinSxt+6fMqaF6q1kI9ws9RgBRCSxWN7T/\n+wh6ovnuUzZqyoosjt6kjosPLP2fOJ6gvMWMjwIDAQABAoIBAQDaZ9KhrOM6kgF2\neNRJjR3IoTxla17UEHdHzbUTWE19tbpvstNT9/eWsP9XoW19y2NoaH43MQGYgykR\nBaLLSNT2ErN/YWOQgpir5AFA93QVnvi14wo9BzV+Xg9aYvWDxzaLbb68Fs9PNsun\nmBpk6+TaK7TS5SbNHFqJoVVm0QRTXAGu2Ekz/cVH2n5LGlP+dn6pluweJVj+KlSW\ndsjnLTI4BdmB73FbDg1wTUAdhcVt6gRlRhFFyHV9VhC+mck8XWUCvfCIyxUTZWLs\nY8GmDHyf9Sr2UcQwZ81imFEEmefp+rIs+bXtFG9bszcShDqiq2yWTJlxpnP0cwg0\nD8wk+ujhAoGBAPaUQU/L09YAZfuKFkd1zhrD2lr6HqSJPymRfIo8ANMdMJVkd5l0\ntCfds4nMP58oGelzbrXQz8d5l6RAt/C1gOb7/vWs7hvfeT5w8rfg7HEPCiMZ637p\nzJIKdwJigxkriGkavEDwi2yHWpIfPQ5pmDUnhEPtDSmiyzJWsfOGAYJfAoGBAOl9\nn4swkTTbPTtlhkwEoHrTTPodvXBWXXwAGi+zLqtafdotK3DWD8MGfTQ/BlSQraL/\ne1mTdpw9u+pHPt+aVBorpNIzV81AM/TITcDzSmxVHMFxoxvTQ1LczgIQ1kQfSkCP\ntWOXLfBB/jggxC1f1rv9xED3WCtAOxIXLQdb3QPRAoGAGY7qaiP9dBwcdgMtJgEO\n+PU+B9oPHQzg0CU1XHq1tyw6YfHE99IB7nPrbSgPnCai8PC3E/9t2gY/cpYGutuF\nXevW1I41LAxw28kHT4nv2BQv/81q/H+tZaHSDhw57Hz3qbVMuAp22Sv6dlToljrZ\nvQC4k/XZPGyUVUZpMY29UE8CgYB3EQSm6iFiHtreyyrs4P8lI1OByGCuRJxve23f\nHTSTVRYQiDA63i4zeb+nQOxte0nQcQ/p4fT+P8zv71z0kbKJle/68Qu5MyBLl0lv\nN6GgFNcRHm3a5qTSQJ8dFpDtNDedLKuHGbTna//Dh5ICwXizbPkDWB6yD5MP6pmf\nwwy1wQKBgBRRq5WgTt4HmolfHYhiuAVm6fTxzyHDHEnYUjZXhGzxHvQN21aQpzDX\ngwpphAIz+9nGUvXsyE6z+K8dFfHVcjaIlGDvMNJjaSy+JTv5cJ4akrY0fUSXFbw8\n/mDri7W3Rrvqku3bxEZnk8cFc6PRbv+BwxNyOkYY9NnqUjB+nQvk\n-----END RSA PRIVATE KEY-----\n"
 }
 
+# aliase content
+$aliasContent="alias update=\"/usr/bin/sudo /usr/bin/apt-get update && /usr/bin/sudo /usr/bin/apt-get upgrade && /usr/bin/sudo /usr/bin/apt-get autoremove; /usr/bin/sudo /var/ossec/bin/agent_control -r -u 000; /usr/bin/sudo rm -f /var/run/motd.mythtv-status sync;sync;sync\"\nalias cleanKernals=\"/usr/bin/dpkg -l 'linux-*' | /bin/sed '/^ii/!d;/'\"$(/bin/uname -r | /bin/sed \"s/\\(.*\\)-\\([^0-9]\\+\\)/\\1/\")\"'/d;s/^[^ ]* [^ ]* \\([^ ]*\\).*/\\1/;/[0-9]/!d' | /usr/bin/xargs /usr/bin/sudo /usr/bin/apt-get -y purge\""
 # aliase file
 file { '/home/myth/.bash_aliases':
     ensure => present,
     owner => 'myth',
     group => 'myth',
     mode => '0644',
-    content => 'alias update="/usr/bin/sudo apt-get update && /usr/bin/sudo apt-get upgrade; /usr/bin/sudo /var/ossec/bin/agent_control -r -u 000; /usr/bin/sudo /usr/bin/sudo rm -f /var/run/motd.mythtv-status; sync;sync;sync"',
+    content => $aliasContent,
 }
 
 # aliase file
@@ -785,7 +813,7 @@ file { '/home/greg/.bash_aliases':
     owner => 'greg',
     group => 'greg',
     mode => '0644',
-    content => 'alias update="/usr/bin/sudo apt-get update && /usr/bin/sudo apt-get upgrade; /usr/bin/sudo /var/ossec/bin/agent_control -r -u 000; sudo /usr/bin/sudo rm -f /var/run/motd.mythtv-status sync;sync;sync"',
+    content => $aliasContent,
 }
 
 # set the time, first install a package
