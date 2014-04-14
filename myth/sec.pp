@@ -21,6 +21,7 @@ $ossecsha1sum=1f813e057d8726a0f0db3a712f87d2db6973551b
 # addsite (util.sh) monitoring for domains (www.webarmadillo.net)
 #
 # todo:
+# https://github.com/comotion/VSF
 # monitor ossec with zabbix - stats from http://www.immutablesecurity.com/index.php/tag/ossec/page/2/
 # http://www.thefanclub.co.za/how-to/how-install-apache2-modsecurity-and-modevasive-ubuntu-1204-lts-server mod security?
 #
@@ -238,7 +239,7 @@ exec { 'updateOssecsmtp':
 exec { 'updateOssecemailfrom':
     logoutput => true,
     unless => "/bin/grep '<email_from>ossec@$fqdn</email_from>' /var/ossec/etc/ossec.conf",
-    command => "/usr/bin/perl -p -i -e 's/<email_from>.*<\/email_from>/<email_from>ossec\@$fqdn<\/email_from>/' /var/ossec/etc/ossec.conf",
+    command => "/usr/bin/perl -p -i -e 's/<email_from>.*<\\/email_from>/<email_from>ossec\\@$fqdn<\\/email_from>/' /var/ossec/etc/ossec.conf",
     require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'wgetOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
