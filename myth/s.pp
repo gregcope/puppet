@@ -131,7 +131,6 @@ exec  { 'sysctlP':
     refreshonly => 'true',
 }
 
-# Ensure that expires, headers and deflate are on!
 # stop puppet running on this host
 service { 'puppet':
     ensure => stopped,
@@ -518,7 +517,7 @@ file { '/var/www/index.html':
 }
 
 # set a good expires config
-file { '/etc/apache2/mods-available/expires.conf':
+file { '/etc/apache2/mods-enabled/expires.conf':
     ensure => present,
     content => "<IfModule mod_expires.c>\n\tExpiresActive On\n\tExpiresByType application/x-javascript \"access plus 1 year\"\n\tExpiresByType application/javascript \"access plus 1 year\"\n\tExpiresByType text/css \"access plus 1 year\"\n\tExpiresByType image/* \"access plus 1 year\"\n</IfModule>",
     mode => '0644',
