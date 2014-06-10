@@ -828,7 +828,7 @@ package { 'tzdata': }
 
 # set the timezone
 file { '/etc/timezone':
-    content => "Etc/UTC\n"
+    content => "Europe/London\n"
 }
 
 # update tzdata
@@ -838,5 +838,11 @@ exec { 'runDpkgReconfigureTzdata':
     # ubuntu insanity.....
     command => '/usr/sbin/dpkg-reconfigure --frontend noninteractive tzdata',
     require => [ File [ '/etc/timezone' ], Package [ 'tzdata' ] ],
-    unless => '/bin/grep UTC0 /etc/localtime',
+    unless => '/bin/grep GMT0BST /etc/localtime',
 }
+
+# or another way
+#file { "/etc/localtime":
+#    source => "file:///usr/share/zoneinfo/Europe/London",
+#    require => [ Package["tzdata"], File [ '/etc/timezone' ] ] 
+#}
