@@ -1,5 +1,8 @@
 $zabbixversion='2.2'
-
+#
+# install based on
+# https://www.zabbix.com/documentation/2.2/manual/installation/install_from_packages#debianubuntu
+#
 # Done
 # Install Zabbix
 
@@ -19,7 +22,7 @@ exec { 'addZabbixAptConfig':
     unless => '/usr/bin/dpkg --get-selections | grep zabbix',
 }
 
-# install packages
+# install server packages
 package { 'zabbix-server-mysql': }
 package { 'zabbix-frontend-php': } 
 
@@ -49,8 +52,8 @@ exec { 'phpmax_input_time':
 
 # what ever the date.timezone is change it to facter timezone
 exec { 'phpdate_timezone':
-    command => '/usr/bin/perl -p -i -e "s/.*date.timezone =.*/date.timezone = $timezone/g" /etc/php5/apache2/php.ini',
-    unless => '/bin/grep "^date.timezone = $timezone" /etc/php5/apache2/php.ini',
+    command => "/usr/bin/perl -p -i -e 's/.*date.timezone =.*/date.timezone = $timezone/g' /etc/php5/apache2/php.ini",
+    unless => "/bin/grep '^date.timezone = $timezone' /etc/php5/apache2/php.ini",
     notify => Exec[ 'restart-apache2' ],
     require => [ Package [ 'apache2' ], Package [ 'php5' ], Package [ 'libapache2-mod-php5' ] ],
 }
@@ -63,7 +66,10 @@ exec { 'restart-apache2':
     require => Package [ 'apache2' ]
 }
 
+# some sensible things to make sure are installed for php
 package { 'php5': }
 package { 'apache2': }
 package { 'libapache2-mod-php5': }
 
+# install agent
+package { 'zabbix-agent': }
