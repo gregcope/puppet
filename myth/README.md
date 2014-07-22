@@ -10,6 +10,6 @@ Puppet modules for installing configuring myth
 
 To recrete the SQL file, post config;
 
-`mysqldump -uroot -p mythconverg capturecard cardinput channel videosource channelgroupnames channel settings > mythconverg.sql`
+`mysqldump -uroot -p mythconverg capturecard cardinput channel videosource channelgroupnames channelgroup settings > mythconverg.sql`
 
 __You will need to run this as sudo facter_mysqlpassword='PUT YOU MYSQL PASSWORD HERE' puppet apply s.pp__ 
