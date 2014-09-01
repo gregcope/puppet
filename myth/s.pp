@@ -16,7 +16,7 @@ augeas { 'smartmontools':
 
 #exec { 'smartd.conf':
 #    logoutput => true,
-#    command => '/usr/bin/perl -p -i -e "s/^SSLProtocol.*/SSLProtocol -ALL +SSLv3 +TLSv1/" /etc/apache2/mods-enable    d/ssl.conf',
+#    command => '/usr/bin/perl -p -i -e "s/^SSLProtocol.*/SSLProtocol -ALL +SSLv3 +TLSv1/" /etc/apache2/mods-enabled/ssl.conf',
 #    unless =>  '/bin/grep \'^SSLProtocol -ALL +SSLv3 +TLSv1\' /etc/apache2/mods-enabled/ssl.conf',
 #    notify => Service [ 'smartmontools' ],
 #}
@@ -487,7 +487,7 @@ service { 'postfix':
 }
 
 # setup basic auth for mythweb from non-lan IPs
-file { '/etc/apache2/mythweb-auth':
+file { '/etc/apache2/conf.d/mythweb-auth':
     ensure => present,
     content => "<Location /mythweb>\n\tAuthType Basic\n\tAuthName mythweb\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.0.0/24 217.155.57.118\n</Location>",
     mode => '0644',
@@ -845,3 +845,12 @@ exec { 'runDpkgReconfigureTzdata':
 #    source => "file:///usr/share/zoneinfo/Europe/London",
 #    require => [ Package["tzdata"], File [ '/etc/timezone' ] ] 
 #}
+
+# stop mythweb trying to be the webserver server root
+exec { 'disableMythWebRootRedirect':
+    logoutput => true,
+    command => '/usr/bin/perl -p -i -e "s/(^\s*)DirectoryIndex mythweb\$/$1#DirectoryIndex mythweb/" /etc/apache2/sites-enabled/default-mythbuntu',
+    unless => '/bin/egrep "^\s*#DirectoryIndex mythweb$" /etc/apache2/sites-enabled/default-mythbuntu',
+    require => Package[ 'apache2' ],
+    notify => Service [ 'apache2' ],
+}
