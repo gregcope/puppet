@@ -32,11 +32,14 @@ $ossecsha1sum=1f813e057d8726a0f0db3a712f87d2db6973551b
 #
 
 # ensure root cannot login directly
+# Stop DNS lookups so that ssh logins are not delayed
+# restart ssh
 augeas { '/etc/ssh/sshd_config':
     context => '/files/etc/ssh/sshd_config',
-    changes => [ 'set PermitRootLogin no'],
+    changes => [ 'set PermitRootLogin no', 'set UseDNS no'],
     notify => Service [ 'ssh' ],
 }
+
 
 # config to restart ssh
 service { 'ssh':
@@ -61,43 +64,44 @@ service { 'ossec-hids-local':
 }
 
 # download ossec-wui checksum
-exec { 'wgetOssecWuiChecksum':
+exec { 'curlOssecWuiChecksum':
     logoutput => true,
     cwd => '/tmp',
-    command => "/usr/bin/wget http://www.ossec.net/files/ossec-wui-${ossecWuiVersion}-checksum.txt",
+    command => "/usr/bin/curl -OsS http://www.ossec.net/files/ossec-wui-${ossecWuiVersion}-checksum.txt",
     unless => "/bin/ls /tmp/ossec-wui-${ossecWuiVersion}-checksum.txt"
 }
 
 # download ossec-wui and checksum
-exec { 'wgetOssecWui':
+exec { 'curlOssecWui':
     logoutput => true,
     cwd => '/tmp',
-    command => "/usr/bin/wget http://www.ossec.net/files/ossec-wui-${ossecWuiVersion}.tar.gz",
+    command => "/usr/bin/curl -OsS http://www.ossec.net/files/ossec-wui-${ossecWuiVersion}.tar.gz",
     unless => "/usr/bin/sha1sum -c /tmp/ossec-wui-${ossecWuiVersion}-checksum.txt",
-    require => Exec [ 'wgetOssecWuiChecksum' ],
+    require => Exec [ 'curlOssecWuiChecksum' ],
 }
 
 # download arachni checksum
-exec { 'wgetArachniChecksum':
+exec { 'curlArachniChecksum':
     logoutput => true,
     cwd => '/tmp',
-    command => "/usr/bin/wget http://downloads.arachni-scanner.com/arachni-${arachniVersion}-linux-x86_64.tar.gz.sha1",
+    command => "/usr/bin/curl -OsS http://downloads.arachni-scanner.com/arachni-${arachniVersion}-linux-x86_64.tar.gz.sha1",
     unless => "/bin/ls /tmp/arachni-${arachniVersion}-linux-x86_64.tar.gz.sha1"
 }
 
 # download arachni if checksum is found
-exec { 'wgetArachni':
+exec { 'curlArachni':
     logoutput => true,
     cwd => '/tmp',
-    command => "/usr/bin/wget http://downloads.arachni-scanner.com/arachni-${arachniVersion}-linux-x86_64.tar.gz",
+    command => "/usr/bin/curl -OsS http://downloads.arachni-scanner.com/arachni-${arachniVersion}-linux-x86_64.tar.gz",
     unless => "/bin/echo \"`/bin/cat /tmp/arachni-${arachniVersion}-linux-x86_64.tar.gz.sha1`  arachni-${arachniVersion}-linux-x86_64.tar.gz\" | /usr/bin/sha1sum -c -",
-    require => Exec [ 'wgetArachniChecksum' ],
+    require => Exec [ 'curlArachniChecksum' ],
+
 }
 
 # add Apache ossec-wui auth config
 file { '/etc/apache2/conf.d/ossec-wui-auth':
     ensure => present,
-    content => "<Location /ossec-wui>\n\tAuthType Basic\n\tAuthName ossec-wui\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.0.0/24\n</Location>",
+    content => "<Location /ossec-wui>\n\tOrder deny,allow\n\tAuthType Basic\n\tAuthName ossec-wui\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.0.0/24 127.0.0.1\n\tSatisfy Any\n</Location>",
     mode => '0644',
     notify => Service [ 'apache2' ],
     require => Package [ 'apache2' ],
@@ -134,7 +138,7 @@ exec { 'untgzOssecWui':
     user => 'www-data',
     command => "/bin/tar -zxf /tmp/ossec-wui-${ossecWuiVersion}.tar.gz",
     unless => '/bin/ls -la /var/www/ossec-wui/index.php',
-    require => [ Exec [ 'aptGetUpdate' ], User [ 'www-data' ], Exec [ 'wgetOssecWui' ], Package [ 'ossec-hids-local' ], Package [ 'apache2' ] ],
+    require => [ Exec [ 'aptGetUpdate' ], User [ 'www-data' ], Exec [ 'curlOssecWui' ], Package [ 'ossec-hids-local' ], Package [ 'apache2' ] ],
 }
 
 # move the ossec-wui-version to ossec-wui ...
@@ -216,7 +220,7 @@ exec { 'updateOssecEmail':
     logoutput => true,
     unless => '/bin/grep "<email_to>root@localhost</email_to>" /var/ossec/etc/ossec.conf',
     command => '/usr/bin/perl -p -i -e "s/<email_to>.*<\/email_to>/<email_to>root\@localhost<\/email_to>/" /var/ossec/etc/ossec.conf',
-    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'wgetOssec.conf' ] ],
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'curlOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
 
@@ -228,7 +232,7 @@ exec { 'updateOssecsmtp':
     logoutput => true,
     unless => '/bin/grep "<smtp_server>localhost</smtp_server>" /var/ossec/etc/ossec.conf',
     command => '/usr/bin/perl -p -i -e "s/<smtp_server>.*<\/smtp_server>/<smtp_server>localhost<\/smtp_server>/" /var/ossec/etc/ossec.conf',
-    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'wgetOssec.conf' ] ],
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'curlOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
 
@@ -240,7 +244,7 @@ exec { 'updateOssecemailfrom':
     logoutput => true,
     unless => "/bin/grep '<email_from>ossec@$fqdn</email_from>' /var/ossec/etc/ossec.conf",
     command => "/usr/bin/perl -p -i -e 's/<email_from>.*<\\/email_from>/<email_from>ossec\\@$fqdn<\\/email_from>/' /var/ossec/etc/ossec.conf",
-    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'wgetOssec.conf' ] ],
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'curlOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
 
@@ -254,10 +258,10 @@ file { '/etc/cron.daily/ossecStats.sh':
 # download and install https://github.com/gregcope/stuff/raw/master/myth/ossec.conf
 # make a backup and make sure the perms are correct
 # unless the sha1sum is cosher
-exec { 'wgetOssec.conf':
+exec { 'curlOssec.conf':
     logoutput => true,
     cwd => '/var/ossec/etc',
-    command => '/bin/mv /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.`date +%Y%m%dT%H%M%S` && /usr/bin/wget https://github.com/gregcope/stuff/raw/master/myth/ossec-ubuntu.conf && cp /var/ossec/etc/ossec-ubuntu.conf /var/ossec/etc/ossec.conf && chmod 400 /var/ossec/etc/ossec.conf',
+    command => '/bin/mv /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.`date +%Y%m%dT%H%M%S` && /usr/bin/curl -OsS https://github.com/gregcope/stuff/raw/master/myth/ossec-ubuntu.conf && cp /var/ossec/etc/ossec-ubuntu.conf /var/ossec/etc/ossec.conf && chmod 400 /var/ossec/etc/ossec.conf',
     unless => "/usr/bin/sha1sum /var/ossec/etc/ossec-ubuntu.conf | /bin/grep $ossecsha1sum",
     require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
     notify => Service [ 'ossec-hids-local' ],
@@ -269,7 +273,7 @@ exec { 'ossecDNScheckfortld':
     logoutput => true,
     unless => "/bin/grep '<command>host -W 5 -t NS $dnstld; host -W 5 -t A $dnstld | sort</command>' /var/ossec/etc/ossec.conf",
     command => "/var/ossec/bin/util.sh adddns $dnstld",
-    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'wgetOssec.conf' ] ],
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'curlOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
 
@@ -288,6 +292,18 @@ exec { 'ossecWEBcheckforwww':
     logoutput => true,
     unless => "/bin/grep '<command>lynx --connect_timeout 10 --dump $httphostname | head -n 10</command>' /var/ossec/etc/ossec.conf",
     command => "/var/ossec/bin/util.sh addsite $httphostname",
-    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'wgetOssec.conf' ] ],
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'curlOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
+
+# config host.allow to allow private network
+# assumes we want eth0 to work
+# facter -p | grep 192
+# facter -p | grep 255
+# $network_eth0 /$netmask_eth0
+exec { 'hostsAllow':
+    logoutput => true,
+    command => "/bin/echo 'ALL: $network_eth0/$netmask_eth0' >> /etc/hosts.allow",
+    unless => "/bin/grep 'ALL: $network_eth0/$netmask_eth0' /etc/hosts.allow",
+}
+
