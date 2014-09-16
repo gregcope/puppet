@@ -1,5 +1,13 @@
 $zabbixversion='2.2'
 #
+# Should be called as;
+#
+# sudo facter_zabbixmysqlpassword='PUTYOURPASSWORDHERE' puppet apply zabbix.pp
+# 
+# to find your zabbic password
+# sudo grep 'dbc_dbpass=' /etc/dbconfig-common/zabbix-server-mysql.conf 
+#
+#
 # install based on
 # https://www.zabbix.com/documentation/2.2/manual/installation/install_from_packages#debianubuntu
 #
@@ -10,7 +18,8 @@ $zabbixversion='2.2'
 # Config Zabbix for an ubuntu host
 # Config Myth
 # Config Apache
-
+# http://blog.zabbix.com/zabbix-2-2-features-part-6-returning-values-from-webpages/2256/
+# http://blog.zzservers.com/2010/04/zabbix-ossec-open-source-compliance-and-security-monitoring/
 #lsbdistcodename facter for precise
 #fqdn is facter for full hostname
 
@@ -73,3 +82,95 @@ package { 'libapache2-mod-php5': }
 
 # install agent
 package { 'zabbix-agent': }
+
+package { 'zabbix-get': }
+
+# zabbix agent mysql needs a .my.cnf to connect to the DB
+# Ubuntu config has /var/lib/zabbix as zabbix HOME dir which does not exist!!!
+# in /etc/zabbix/zabbix_agentd.d/userparameter_mysql.conf ... go figure
+file { '/var/lib/zabbix/.my.cnf': 
+    ensure => present,
+    mode => '0600',
+    owner => 'zabbix',
+    group => 'zabbix',
+    content => "[client]\nuser=zabbix\npassword=$zabbixmysqlpassword\n",
+    notify => Service [ 'zabbix-agent' ],
+    require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
+}
+
+# change Server in /etc/zabbix/zabbix_agentd.conf
+# from localhost to our server (facter) ipaddress (this host)
+exec {'zabbixAgentdServer':
+    logoutput => true,
+    unless => "/bin/grep Server=$ipaddress /etc/zabbix/zabbix_agentd.conf",
+    command => "/usr/bin/perl -p -i -e 's/Server=.*/Server=$ipaddress/g' /etc/zabbix/zabbix_agentd.conf",
+    notify => Service [ 'zabbix-agent' ],
+    require => Package [ 'zabbix-agent' ],
+}
+
+# change ServerActive in /etc/zabbix/zabbix_agentd.conf
+# from localhost to our server (facter) ipaddress (this host)
+exec {'zabbixAgentdServerActive':
+    logoutput => true,
+    unless => "/bin/grep ServerActive=$ipaddress /etc/zabbix/zabbix_agentd.conf",
+    command => "/usr/bin/perl -p -i -e 's/ServerActive=.*/ServerActive=$ipaddress/g' /etc/zabbix/zabbix_agentd.conf",
+    notify => Service [ 'zabbix-agent' ],
+    require => Package [ 'zabbix-agent' ],
+}
+
+# need to ensure the dir is there!!!
+file { '/var/lib/zabbix':
+    ensure => 'directory',
+    owner => 'zabbix',
+    group => 'zabbix',
+    mode => '0770'
+}
+
+exec { 'setfqdnInzabbixAgentId':
+    logoutput => true,
+    command => "/usr/bin/perl -p -i -e 's/.*HostnameItem=.*/HostnameItem=system.hostname/g' /etc/zabbix/zabbix_agentd.conf && /usr/bin/perl -p -i -e 's/^Hostname=.*/#Hostname=Zabbix Server/g' /etc/zabbix/zabbix_agentd.conf",
+    unless => "/bin/grep '^HostnameItem=system.hostname' /etc/zabbix/zabbix_agentd.conf && /bin/grep -v '^HostnameItem=' /etc/zabbix/zabbix_agentd.conf",
+    notify => Service [ 'zabbix-agent' ],
+    require => Package [ 'zabbix-agent' ],
+}
+
+
+# not really needed but we want to bouce it after config changes
+service { 'zabbix-agent':
+    ensure => 'running',
+    enable => 'true',
+}
+
+# diskstats agent config file
+# from http://www.muck.net/19/getting-hard-disk-performance-stats-from-zabbix
+file { '/etc/zabbix/zabbix_agentd.d/userparameter_disk.conf':
+    ensure => present,
+    mode => '0644',
+    owner => 'root',
+    group => 'root',
+    content => "UserParameter=custom.vfs.dev.read.ops[*],cat /proc/diskstats | grep \$1 | head -1 | awk '{print \$\$4}'\nUserParameter=custom.vfs.dev.read.ms[*],cat /proc/diskstats | grep \$1 | head -1 | awk \'{print \$\$7}\'\nUserParameter=custom.vfs.dev.write.ops[*],cat /proc/diskstats | grep \$1 | head -1 | awk '{print \$\$8}'\nUserParameter=custom.vfs.dev.write.ms[*],cat /proc/diskstats | grep \$1 | head -1 | awk '{print \$\$11}'\nUserParameter=custom.vfs.dev.io.active[*],cat /proc/diskstats | grep \$1 | head -1 | awk '{print \$\$12}'\nUserParameter=custom.vfs.dev.io.ms[*],cat /proc/diskstats | grep \$1 | head -1 | awk '{print \$\$13}'\nUserParameter=custom.vfs.dev.read.sectors[*],cat /proc/diskstats | grep \$1 | head -1 | awk '{print \$\$6}'\nUserParameter=custom.vfs.dev.write.sectors[*],cat /proc/diskstats | grep \$1 | head -1 | awk '{print \$\$10}'",
+    notify => Service [ 'zabbix-agent' ],
+    require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
+}
+
+# dns response time command
+# /usr/bin/dig www.google.com | grep "Query time" | awk '{print $4}'
+file { '/etc/zabbix/zabbix_agentd.d/userparameter_dns.conf':
+    ensure => present,
+    mode => '0644',
+    owner => 'root',
+    group => 'root',
+    content => "UserParameter=custom.dns.response.time[*],/usr/bin/dig +nocmd +noall +stats +time=2 \$1 | grep 'Query time' | awk '{print \$\$4}'\nUserParameter=custom.dns.response.type[*],/usr/bin/dig +nocmd +noall +answer +time=2 \$1 | head -1 | awk '{print \$\$4}'\nUserParameter=custom.dns.response.record[*],/usr/bin/dig +short +time=2 \$1 | head -1",
+    notify => Service [ 'zabbix-agent' ],
+    require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
+}
+
+file { '/etc/zabbix/zabbix_agentd.d/userparameter_ntpd.conf':
+    ensure => present,
+    mode => '0644',
+    owner => 'root',
+    group => 'root',
+    notify => Service [ 'zabbix-agent' ],
+    require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
+    content => "UserParameter=custom.ntpd.remote,/usr/bin/ntpq -p | grep '*' | awk '{print \$1}'\nUserParameter=custom.ntpd.offset,/usr/bin/ntpq -p | grep '*' | awk '{print \$9}'"
+}
