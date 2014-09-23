@@ -174,3 +174,15 @@ file { '/etc/zabbix/zabbix_agentd.d/userparameter_ntpd.conf':
     require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
     content => "UserParameter=custom.ntpd.remote,/usr/bin/ntpq -p | grep '*' | awk '{print \$1}'\nUserParameter=custom.ntpd.offset,/usr/bin/ntpq -p | grep '*' | awk '{print \$9}'"
 }
+
+# track ESTABLISHED network connections
+# from http://systembash.com/content/track-tcp-and-udp-connections-with-zabbix/
+file { '/etc/zabbix/zabbix_agentd.d/userparameter_tcpstat.conf':
+    ensure => present,
+    mode => '0644',
+    owner => 'root',
+    group => 'root',
+    notify => Service [ 'zabbix-agent' ],
+    require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
+    content => "UserParameter=proc.net.tcp.count.established,/bin/grep -Ec '[0-9A-F]{8}:[0-9A-F]{4} [0-9A-F]{8}:[0-9A-F]{4} 01' /proc/net/tcp\nUserParameter=sockstat.sockets,/bin/cat /proc/net/sockstat|/bin/grep sockets|/usr/bin/cut -d' ' -f 3\nUserParameter=sockstat.tcp.inuse,/bin/cat /proc/net/sockstat|/bin/grep TCP|/usr/bin/cut -d' ' -f 3\nUserParameter=sockstat.tcp.orphan,/bin/cat /proc/net/sockstat|/bin/grep TCP|/usr/bin/cut -d' ' -f 5\nUserParameter=sockstat.tcp.timewait,/bin/cat /proc/net/sockstat|/bin/grep TCP|/usr/bin/cut -d' ' -f 7\nUserParameter=sockstat.tcp.allocated,/bin/cat /proc/net/sockstat|/bin/grep TCP|/usr/bin/cut -d' ' -f 9\nUserParameter=sockstat.tcp.mem,/bin/cat /proc/net/sockstat|/bin/grep TCP|/usr/bin/cut -d' ' -f 11\nUserParameter=sockstat.udp.inuse,/bin/cat /proc/net/sockstat|/bin/grep UDP:|/usr/bin/cut -d' ' -f 3\nUserParameter=sockstat.udp.mem,/bin/cat /proc/net/sockstat|/bin/grep UDP:|/usr/bin/cut -d' ' -f 5",
+}
