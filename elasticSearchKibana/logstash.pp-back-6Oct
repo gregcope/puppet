@@ -58,19 +58,38 @@ package { 'logstash-contrib':
     require => [ Exec [ 'aptGetUpdate' ], File [ '/etc/apt/sources.list.d/logstash1.4.list' ], Package [ 'openjdk-7-jre-headless' ] ],
 }
 
+#exec { 'logstashdefaultOnBoot':
+#    logoutput => true,
+#    unless => '/bin/grep "START=true" /etc/default/logstash',
+#    command => '/usr/bin/perl -p -i -e "s/^START=.*$/START=true/" /etc/default/logstash',
+#    require => [ Package [ 'logstash' ] ],
+#}
+
 # make it go on boot
 # only if installed, and if we have some config files
 service { 'logstash':
     ensure => 'running',
     enable => 'true',
     require => [ Package [ 'logstash' ], File [ '/etc/logstash/conf.d/30-lumberjack-output.conf'], File [ '/etc/logstash/conf.d/01-lumberjack-input.conf'] ],
+    # Exec [ 'logstashdefaultOnBoot'] ],
 }
+
+# add logstash user to adm group on ubuntu so that they can read log files etc.
+# restart logstash
+# only if logstash is installed
+#user { "logstash":
+#    ensure => present,
+#    require => Package [ 'logstash' ],
+#    notify => Service [ 'logstash' ],
+#    groups => "adm",
+#    membership => minimum,
+#}
 
 # configure a logstash input
 file { '/etc/logstash/conf.d/01-lumberjack-input.conf':
     ensure => present,
     mode => '0644',
-    content => "input {\n  lumberjack {\n    port => 5000\n   type => 'logs'\n    ssl_certificate => '/etc/logstash/logstash-forwarder.crt'\n    ssl_key => '/etc/logstash/logstash-forwarder.key'\n  }\n}\n",
+    content => "input {\n\tlumberjack {\n\t\tport => 5000\n\t\ttype => 'logs'\n\t\tssl_certificate => '/etc/logstash/logstash-forwarder.crt'\n\t\tssl_key => '/etc/logstash/logstash-forwarder.key'\n\t}\n}\n",
     require => [ Package [ 'logstash' ], Exec [ 'createlogstashSSLCert' ] ],
 }
 
