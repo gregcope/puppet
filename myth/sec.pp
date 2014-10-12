@@ -230,7 +230,7 @@ exec { 'updateOssecEmail':
     logoutput => true,
     unless => '/bin/grep "<email_to>root@localhost</email_to>" /var/ossec/etc/ossec.conf',
     command => '/usr/bin/perl -p -i -e "s/<email_to>.*<\/email_to>/<email_to>root\@localhost<\/email_to>/" /var/ossec/etc/ossec.conf',
-    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'curlOssec.conf' ] ],
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'copyCurlOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
 
@@ -242,7 +242,7 @@ exec { 'updateOssecsmtp':
     logoutput => true,
     unless => '/bin/grep "<smtp_server>localhost</smtp_server>" /var/ossec/etc/ossec.conf',
     command => '/usr/bin/perl -p -i -e "s/<smtp_server>.*<\/smtp_server>/<smtp_server>localhost<\/smtp_server>/" /var/ossec/etc/ossec.conf',
-    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'curlOssec.conf' ] ],
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'copyCurlOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
 
@@ -254,7 +254,7 @@ exec { 'updateOssecemailfrom':
     logoutput => true,
     unless => "/bin/grep '<email_from>ossec@$fqdn</email_from>' /var/ossec/etc/ossec.conf",
     command => "/usr/bin/perl -p -i -e 's/<email_from>.*<\\/email_from>/<email_from>ossec\\@$fqdn<\\/email_from>/' /var/ossec/etc/ossec.conf",
-    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'curlOssec.conf' ] ],
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'copyCurlOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
 
@@ -271,10 +271,20 @@ file { '/etc/cron.daily/ossecStats.sh':
 exec { 'curlOssec.conf':
     logoutput => true,
     cwd => '/var/ossec/etc',
-    command => '/bin/mv /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.`date +%Y%m%dT%H%M%S` && /usr/bin/curl -OsS https://github.com/gregcope/stuff/raw/master/myth/ossec-ubuntu.conf && cp /var/ossec/etc/ossec-ubuntu.conf /var/ossec/etc/ossec.conf && chmod 400 /var/ossec/etc/ossec.conf',
+    command => '/usr/bin/curl -OsS https://github.com/gregcope/stuff/raw/master/myth/ossec-ubuntu.conf && chmod 400 /var/ossec/etc/ossec-ubuntu.conf',
     unless => "/usr/bin/sha1sum /var/ossec/etc/ossec-ubuntu.conf | /bin/grep $ossecsha1sum",
     require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
     notify => Service [ 'ossec-hids-local' ],
+}
+
+# Copy downloaded ossec config file unless it has been copied in
+# make backup, ensure perms are correct
+exec { 'copyCurlOssec.conf':
+    logoutput => true,
+    cwd => '/var/ossec/etc',
+    command => '/bin/mv /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.`date +%Y%m%dT%H%M%S` && cp /var/ossec/etc/ossec-ubuntu.conf /var/ossec/etc/ossec.conf && chmod 400 /var/ossec/etc/ossec.conf',
+    unless => '/bin/grep "edits by Greg" /var/ossec/etc/ossec.conf',
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'curlOssec.conf' ] ],
 }
 
 # Add DNS check for webarmadillo.net
@@ -283,7 +293,7 @@ exec { 'ossecDNScheckfortld':
     logoutput => true,
     unless => "/bin/grep '<command>host -W 5 -t NS $dnstld; host -W 5 -t A $dnstld | sort</command>' /var/ossec/etc/ossec.conf",
     command => "/var/ossec/bin/util.sh adddns $dnstld",
-    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'curlOssec.conf' ] ],
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'copyCurlOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
 
@@ -302,7 +312,7 @@ exec { 'ossecWEBcheckforwww':
     logoutput => true,
     unless => "/bin/grep '<command>lynx --connect_timeout 10 --dump $httphostname | head -n 10</command>' /var/ossec/etc/ossec.conf",
     command => "/var/ossec/bin/util.sh addsite $httphostname",
-    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'curlOssec.conf' ] ],
+    require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ], Exec [ 'copyCurlOssec.conf' ] ],
     notify => Service [ 'ossec-hids-local' ],
 }
 
