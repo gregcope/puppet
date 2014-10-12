@@ -195,3 +195,20 @@ user { "zabbix":
     groups => "adm",
     membership => minimum,
 }
+
+# NFS checks
+# part from https://www.zabbix.com/forum/showthread.php?t=20363
+# stat -f /var/lib/mythtv/videos | grep -o 'Type: [a-zA-Z0-9 \t]\+$' | grep -o ': [a-zA-Z0-9 \t]\+$' | grep -o '[a-zA-Z0-9]\+'^C
+# chaged to (so that it also groks ext2/ext3...)
+# stat -f /var/lib/mythtv | grep -o 'Type: [a-zA-Z0-9/ \t]\+$' | grep -o ': [a-zA-Z0-9/ \t]\+$' | grep -o '[a-zA-Z0-9/]\+'
+# Write 1 byte, delete check (for nfs or anything...) 
+# { TIMEFORMAT=%R; time ( ls > /dev/null && pwd > /dev/null ) }
+file { '/etc/zabbix/zabbix_agentd.d/userparameter_statTouch.conf':
+    ensure => present,
+    mode => '0644',
+    owner => 'root',
+    group => 'root',
+    notify => Service [ 'zabbix-agent' ],
+    require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
+    content => "UserParameter=custom.vfs.stat.type[*],/usr/bin/stat -f \$1 | /bin/grep -o \'Type: [a-zA-Z0-9/ \t]\\+$\' | /bin/grep -o \': [a-zA-Z0-9/ \t]\\+$\' | /bin/grep -o \'[a-zA-Z0-9/]\\+\'\nUserParameter=custom.vfs.file.touch[*],/usr/bin/touch \$1\n",
+}

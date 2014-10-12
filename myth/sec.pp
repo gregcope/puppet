@@ -173,6 +173,16 @@ file { '/etc/chkrootkit.conf':
     content => "RUN_DAILY=\"true\"\n#Added /usr/lib/pymodules/python2.7/.path GJJC 20131212\nRUN_DAILY_OPTS=\"-q -e /usr/lib/pymodules/python2.7/.path\"\nDIFF_MODE=\"true\"\n",
 }
 
+#
+# if chkrootkit has gone off, tidy up as it should have bleated in email
+# needs config to have been changed
+file { '/etc/cron.daily/XXXresetCheckrootkit':
+    ensure => present,
+    mode => '0755',
+    require => File [ '/etc/chkrootkit.conf' ],
+    content => "#!/bin/sh\n\nif /usr/bin/diff -u /var/log/chkrootkit/log.expected /var/log/chkrootkit/log.today ; then\n\texit 0\nelse\n\t/bin/cp -a -f /var/log/chkrootkit/log.today /var/log/chkrootkit/log.expected\n\t/bin/echo \"Reset /var/log/chkrootkit/log.expected on `date`\" | /usr/bin/mail -s 'Reset /var/log/chkrootkit/log.expected' root\nfi\n",
+}
+
 # Ensure the rkhunter.conf is ok
 file { '/etc/rkhunter.conf.local':
     ensure => present,
