@@ -29,7 +29,9 @@ $ossecsha1sum=1f813e057d8726a0f0db3a712f87d2db6973551b
 # http://www.security-marathon.be/?p=951
 # https://github.com/nzin/puppet-ossec/blob/master/templates/10_ossec.conf.erb
 # http://dcid.me/blog/2011/10/3woo-alerting-on-dns-ip-address-changes/
-#
+# SSL confg;
+# http://security.stackexchange.com/questions/51680/optimal-web-server-ssl-cipher-suite-configuration/51730#51730
+# https://www.ssllabs.com/ssltest/analyze.html
 
 # ensure root cannot login directly
 # Stop DNS lookups so that ssh logins are not delayed

@@ -94,8 +94,8 @@ exec { 'enableDefaultSsl':
 # Enabled strong Apache SSLProtocols
 exec { 'enableStrongApacheSSLProtocols':
     logoutput => true,
-    command => '/usr/bin/perl -p -i -e "s/^SSLProtocol.*/SSLProtocol -ALL +SSLv3 +TLSv1/" /etc/apache2/mods-enabled/ssl.conf',
-    unless =>  '/bin/grep \'^SSLProtocol -ALL +SSLv3 +TLSv1\' /etc/apache2/mods-enabled/ssl.conf',
+    command => '/usr/bin/perl -p -i -e "s/^SSLProtocol.*/SSLProtocol -ALL +TLSv1.1 +TLSv1.2 +TLSv1/" /etc/apache2/mods-enabled/ssl.conf',
+    unless =>  '/bin/grep \'^SSLProtocol -ALL +TLSv1.1 +TLSv1.2 +TLSv1\' /etc/apache2/mods-enabled/ssl.conf',
     notify => Service [ 'apache2' ],
     require => Exec [ 'enableDefaultSsl' ],
 }
@@ -103,8 +103,8 @@ exec { 'enableStrongApacheSSLProtocols':
 # Enabled strong Apache SSLCipherSuite
 exec { 'enableStrongApacheSSLCipherSuite':
     logoutput => true,
-    command => '/usr/bin/perl -p -i -e "s/^SSLCipherSuite.*/SSLCipherSuite ALL:!ADH:RC4+RSA:+HIGH:!MEDIUM:!LOW:!SSLv2:!EXPORT/" /etc/apache2/mods-enabled/ssl.conf',
-    unless =>  '/bin/grep \'^SSLCipherSuite ALL:!ADH:RC4+RSA:+HIGH:!MEDIUM:!LOW:!SSLv2:!EXPORT\' /etc/apache2/mods-enabled/ssl.conf',
+    command => '/usr/bin/perl -p -i -e "s/^SSLCipherSuite.*/SSLCipherSuite ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+3DES:!aNULL:!MD5:!DSS/" /etc/apache2/mods-enabled/ssl.conf',
+    unless =>  '/bin/grep \'^SSLCipherSuite ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+3DES:!aNULL:!MD5:!DSS\' /etc/apache2/mods-enabled/ssl.conf',
     notify => Service [ 'apache2' ],
     require => Exec [ 'enableDefaultSsl' ],
 }
