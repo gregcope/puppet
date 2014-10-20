@@ -1,5 +1,5 @@
 $zabbixversion='2.2'
-$discovery_disk.pl_sha='cb7d986b707f40ca0affa52de2b5a39b8365ac6d'
+$discovery_disk_sha='cb7d986b707f40ca0affa52de2b5a39b8365ac6d'
 #
 # Should be called as;
 #
@@ -237,6 +237,6 @@ exec { 'curlOssec.conf':
      logoutput => true,
      cwd => '/etc/zabbix/zabbix_agentd.d',
      command => '/usr/bin/curl -OsS https://github.com/gregcope/stuff/raw/master/myth/discover_disk.pl && chmod 755 /etc/zabbix/zabbix_agentd.d/discover_disk.pl',
-     unless => "/usr/bin/sha1sum /etc/zabbix/zabbix_agentd.d/discover_disk.pl | grep $discovery_disk.pl_sha",
+     unless => "/usr/bin/sha1sum /etc/zabbix/zabbix_agentd.d/discover_disk.pl | grep $discovery_disk_sha",
      require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
 }
