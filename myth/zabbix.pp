@@ -230,3 +230,13 @@ file { '/etc/zabbix/zabbix_agentd.d/userparameter_discovery.conf':
 }
 
 
+# download and install https://github.com/gregcope/stuff/raw/master/myth/discover_disk.pl
+# unless the sha1sum is cosher
+exec { 'curlOssec.conf':
+     logoutput => true,
+     cwd => '/etc/zabbix/zabbix_agentd.d',
+     command => '/usr/bin/curl -OsS https://github.com/gregcope/stuff/raw/master/myth/discover_disk.pl && chmod 755 /etc/zabbix/zabbix_agentd.d/discover_disk.pl',
+277     unless => "/usr/bin/sha1sum /etc/zabbix/zabbix_agentd.d/discover_disk.pl | /bin/grep $ossecsha1sum",
+278     require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
+279     notify => Service [ 'ossec-hids-local' ],
+280 }
