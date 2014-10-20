@@ -1,4 +1,5 @@
 $zabbixversion='2.2'
+$discovery_disk.pl_sha='cb7d986b707f40ca0affa52de2b5a39b8365ac6d'
 #
 # Should be called as;
 #
@@ -236,7 +237,6 @@ exec { 'curlOssec.conf':
      logoutput => true,
      cwd => '/etc/zabbix/zabbix_agentd.d',
      command => '/usr/bin/curl -OsS https://github.com/gregcope/stuff/raw/master/myth/discover_disk.pl && chmod 755 /etc/zabbix/zabbix_agentd.d/discover_disk.pl',
-277     unless => "/usr/bin/sha1sum /etc/zabbix/zabbix_agentd.d/discover_disk.pl | /bin/grep $ossecsha1sum",
-278     require => [ Package [ 'ossec-hids-local' ], Exec [ 'aptGetUpdate' ] ],
-279     notify => Service [ 'ossec-hids-local' ],
-280 }
+     unless => "/usr/bin/sha1sum /etc/zabbix/zabbix_agentd.d/discover_disk.pl | grep $discovery_disk.pl_sha",
+     require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
+}
