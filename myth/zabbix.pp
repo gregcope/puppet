@@ -13,7 +13,9 @@ $zabbixversion='2.2'
 #
 # Done
 # Install Zabbix
-
+#
+# 
+#
 # To do
 # Config Zabbix for an ubuntu host
 # Config Myth
@@ -212,3 +214,19 @@ file { '/etc/zabbix/zabbix_agentd.d/userparameter_statTouch.conf':
     require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
     content => "UserParameter=custom.vfs.stat.type[*],/usr/bin/stat -f \$1 | /bin/grep -o \'Type: [a-zA-Z0-9/ \t]\\+$\' | /bin/grep -o \': [a-zA-Z0-9/ \t]\\+$\' | /bin/grep -o \'[a-zA-Z0-9/]\\+\'\nUserParameter=custom.vfs.file.touch[*],/usr/bin/touch \$1\n",
 }
+
+# Autodiscovery 
+# http://virtuallyhyper.com/2013/06/monitor-disk-io-stats-with-zabbix/
+# https://www.zabbix.com/forum/showthread.php?p=104719#post104719
+# Param to run autodiscovery script
+file { '/etc/zabbix/zabbix_agentd.d/userparameter_discovery.conf':
+    ensure => present,
+    mode => '0755',
+    owner => 'root',
+    group => 'root',
+    notify => Service [ 'zabbix-agent' ],
+    require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
+    content => 'UserParameter=custom.disks.discovery_perl,/etc/zabbix/zabbix_agentd.d/discover_disk.pl',
+}
+
+
