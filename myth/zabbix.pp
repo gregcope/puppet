@@ -1,5 +1,5 @@
 $zabbixversion='2.2'
-$discovery_disk_sha='cb7d986b707f40ca0affa52de2b5a39b8365ac6d'
+$discovery_disk_sha='e4a6a34c2c740090f4c6882849e3a38d5d8cf0ad'
 #
 # Should be called as;
 #
@@ -227,16 +227,16 @@ file { '/etc/zabbix/zabbix_agentd.d/userparameter_discovery.conf':
     group => 'root',
     notify => Service [ 'zabbix-agent' ],
     require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
-    content => 'UserParameter=custom.disks.discovery_perl,/etc/zabbix/zabbix_agentd.d/discover_disk.pl',
+    content => 'UserParameter=custom.disks.discovery_perl,/etc/zabbix/zabbix_agentd.d/discovery_disks.pl',
 }
 
 
 # download and install https://github.com/gregcope/stuff/raw/master/myth/discover_disk.pl
 # unless the sha1sum is cosher
-exec { 'curlOssec.conf':
+exec { 'curldiscoveryDisk':
      logoutput => true,
      cwd => '/etc/zabbix/zabbix_agentd.d',
-     command => '/usr/bin/curl -OsS https://github.com/gregcope/stuff/raw/master/myth/discover_disk.pl && chmod 755 /etc/zabbix/zabbix_agentd.d/discover_disk.pl',
-     unless => "/usr/bin/sha1sum /etc/zabbix/zabbix_agentd.d/discover_disk.pl | grep $discovery_disk_sha",
+     command => '/usr/bin/curl -OsS https://github.com/gregcope/stuff/raw/master/myth/discovery_disks.pl && chmod 755 /etc/zabbix/zabbix_agentd.d/discovery_disks.pl',
+     unless => "/usr/bin/sha1sum /etc/zabbix/zabbix_agentd.d/discovery_disks.pl | grep $discovery_disk_sha",
      require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
 }
