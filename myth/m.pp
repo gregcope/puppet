@@ -29,13 +29,13 @@ file { '/etc/modprobe.d/dvb.conf':
 #    unless =>  '/bin/grep \'^SSLProtocol -ALL +SSLv3 +TLSv1\' /etc/apache2/mods-enabled/ssl.conf',
 exec { 'setLircREMOTE_DRIVER':
     logoutput => true,
-    command => '/usr/bin/perl -p -i -e \'s/^REMOTE_DRIVER=.*/REMOTE_DRIVER="dev/input"/\' /etc/lirc/hardware.conf',
+    command => '/usr/bin/perl -p -i -e "s#^REMOTE_DRIVER=.*#REMOTE_DRIVER=\"dev/input\"#" /etc/lirc/hardware.conf',
     unless => '/bin/grep \'REMOTE_DRIVER="dev/input"\'  /etc/lirc/hardware.conf',
 }
 
 exec { 'setLircREMOTE_DEVICE':
    logoutput => true,
-   command => '/usr/bin/perl -p -i -e \'s/^REMOTE_DEVICE=.*/REMOTE_DEVICE="/dev/input/by-path/pci-0000:00:04.1-usb-0:3.2-event-ir"/\' /etc/lirc/hardware.conf',
+   command => '/usr/bin/perl -p -i -e "s#^REMOTE_DEVICE=.*#REMOTE_DEVICE=\"/dev/input/by-path/pci-0000:00:04.1-usb-0:3.2-event-ir\"#" /etc/lirc/hardware.conf',
    unless => '/bin/grep \'REMOTE_DEVICE="/dev/input/by-path/pci-0000:00:04.1-usb-0:3.2-event-ir"\'  /etc/lirc/hardware.conf',
 }
 
