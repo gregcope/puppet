@@ -7,6 +7,19 @@ package { 'libmyth-0.27-0':
     ensure => installed,
 }
 
+# force tv cards to appear in the right order
+# to find out which manufacter (and other details - drop the grep)
+# udevadm info -a -p $(udevadm info -q path -n /dev/dvb/adapter1/dvr0) | grep prod
+# https://tvheadend.org/boards/4/topics/7109?r=11035
+# https://www.mythtv.org/wiki/Device_Filenames_and_udev#Alternatives_to_udev_for_naming_for_DVB_cards_.28The_adapter_nr_module_option.29
+file { '/etc/modprobe.d/dvb.conf':
+   ensure => present,
+   mode => '0644',
+   owner => root,
+   group => root,
+   content => "options dvb-usb-dib0700 adapter_nr=1,2\noptions em28xx_dvb adapter_nr=0",
+}
+
 # and that the service has upgraded to 0.27
 # restart mythbackend
 exec { 'restartmythtvbackend':

@@ -1,5 +1,5 @@
 $zabbixversion='2.2'
-$discovery_disk_sha='e4a6a34c2c740090f4c6882849e3a38d5d8cf0ad'
+$discovery_disk_sha='cb7d986b707f40ca0affa52de2b5a39b8365ac6d'
 #
 # Should be called as;
 #
@@ -25,6 +25,14 @@ $discovery_disk_sha='e4a6a34c2c740090f4c6882849e3a38d5d8cf0ad'
 # http://blog.zzservers.com/2010/04/zabbix-ossec-open-source-compliance-and-security-monitoring/
 #lsbdistcodename facter for precise
 #fqdn is facter for full hostname
+
+
+
+
+#
+# remove snmpd snmptt package as I do not want them runing ...
+package { 'snmptt': ensure => 'absent' }
+package { 'snmpd': ensure => 'absent' }
 
 # add the zabbix Apt config files
 # if they have not already been added
@@ -144,6 +152,14 @@ service { 'zabbix-agent':
     enable => 'true',
 }
 
+# not really needed by we need to bounce if after config changes
+service { 'zabbix-server':
+    ensure => 'running',
+    enable => 'true',
+}
+
+
+
 # diskstats agent config file
 # from http://www.muck.net/19/getting-hard-disk-performance-stats-from-zabbix
 file { '/etc/zabbix/zabbix_agentd.d/userparameter_disk.conf':
@@ -222,12 +238,12 @@ file { '/etc/zabbix/zabbix_agentd.d/userparameter_statTouch.conf':
 # Param to run autodiscovery script
 file { '/etc/zabbix/zabbix_agentd.d/userparameter_discovery.conf':
     ensure => present,
-    mode => '0755',
+    mode => '0644',
     owner => 'root',
     group => 'root',
     notify => Service [ 'zabbix-agent' ],
     require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
-    content => 'UserParameter=custom.disks.discovery_perl,/etc/zabbix/zabbix_agentd.d/discovery_disks.pl',
+    content => 'UserParameter=custom.disks.discovery_perl,/var/lib/zabbix/discovery_disks.pl',
 }
 
 
@@ -235,8 +251,20 @@ file { '/etc/zabbix/zabbix_agentd.d/userparameter_discovery.conf':
 # unless the sha1sum is cosher
 exec { 'curldiscoveryDisk':
      logoutput => true,
-     cwd => '/etc/zabbix/zabbix_agentd.d',
-     command => '/usr/bin/curl -OsS https://github.com/gregcope/stuff/raw/master/myth/discovery_disks.pl && chmod 755 /etc/zabbix/zabbix_agentd.d/discovery_disks.pl',
-     unless => "/usr/bin/sha1sum /etc/zabbix/zabbix_agentd.d/discovery_disks.pl | grep $discovery_disk_sha",
+     cwd => '/var/lib/zabbix',
+     command => '/usr/bin/curl -OsS https://raw.githubusercontent.com/gregcope/stuff/master/myth/discovery_disks.pl && chmod 755 /var/lib/zabbix/discovery_disks.pl',
+     unless => "/usr/bin/sha1sum /var/lib/zabbix/discovery_disks.pl | grep $discovery_disk_sha",
      require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
 }
+
+# up the number of Server discovery process
+# Only if server is installed
+# notify zabbix server
+exec {'zabbixServerStartDiscoverers':
+     logoutput => true,
+     unless => '/bin/grep "^StartDiscoverers=2" /etc/zabbix/zabbix_server.conf',
+     command => '/usr/bin/perl -p -i -e "s/# StartDiscoverers=1/StartDiscoverers=2/" /etc/zabbix/zabbix_server.conf',
+     notify => Service [ 'zabbix-server' ],
+     require => Package [ 'zabbix-server-mysql' ],
+}
+
