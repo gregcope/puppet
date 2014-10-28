@@ -20,6 +20,27 @@ file { '/etc/modprobe.d/dvb.conf':
    content => "options dvb-usb-dib0700 adapter_nr=1,2\noptions em28xx_dvb adapter_nr=0",
 }
 
+# reconfig lircd
+# http://parker1.co.uk/mythtv_tips.php
+# set REMOTE_DRIVER="dev/input"
+# set REMOTE_DEVICE="/dev/input/by-path/pci-0000:02:09.2-event-ir"
+# set REMOTE_DEVICE="/dev/input/by-path/pci-0000:00:04.1-usb-0:3.2-event-ir"
+#    command => '/usr/bin/perl -p -i -e "s/^SSLProtocol.*/SSLProtocol -ALL +SSLv3 +TLSv1/" /etc/apache2/mods-enabled/ssl.conf',
+#    unless =>  '/bin/grep \'^SSLProtocol -ALL +SSLv3 +TLSv1\' /etc/apache2/mods-enabled/ssl.conf',
+exec { 'setLircREMOTE_DRIVER':
+    logoutput => true,
+    command => '/usr/bin/perl -p -i -e \'s/^REMOTE_DRIVER=.*/REMOTE_DRIVER="dev/input"/\' /etc/lirc/hardware.conf',
+    unless => '/bin/grep \'REMOTE_DRIVER="dev/input"\'  /etc/lirc/hardware.conf',
+}
+
+exec { 'setLircREMOTE_DEVICE':
+   logoutput => true,
+   command => '/usr/bin/perl -p -i -e \'s/^REMOTE_DEVICE=.*/REMOTE_DEVICE="/dev/input/by-path/pci-0000:00:04.1-usb-0:3.2-event-ir"/\' /etc/lirc/hardware.conf',
+   unless => '/bin/grep \'REMOTE_DEVICE="/dev/input/by-path/pci-0000:00:04.1-usb-0:3.2-event-ir"\'  /etc/lirc/hardware.conf',
+}
+
+
+
 # and that the service has upgraded to 0.27
 # restart mythbackend
 exec { 'restartmythtvbackend':
