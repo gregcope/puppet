@@ -12,12 +12,13 @@ augeas { 'smartmontools':
     notify => Service [ 'smartmontools' ],
 }
 
-# switch off graphical grub boot
-# sudo augtool print /files/etc/default/grub/GRUB_CMDLINE_LINUX_DEFAULT = "\"text\""
+# switch off graphical grub boot, but keep X working
+# sudo augtool print /files/etc/default/grub/GRUB_CMDLINE_LINUX_DEFAULT
 augeas { 'GRUB_CMDLINE_LINUX_DEFAULT':
     context => '/files/etc/default/grub',
     require => Package['augeas-tools'],
-    changes => 'set GRUB_CMDLINE_LINUX_DEFAULT "text"',
+#    changes => "set GRUB_CMDLINE_LINUX_DEFAULT \"'quiet splash'\"",
+    changes => "set GRUB_CMDLINE_LINUX_DEFAULT \"\"",
     notify => Exec [ 'reconfigGrub' ],
 }
 
@@ -36,6 +37,16 @@ exec { 'reconfigGrub':
 #    unless =>  '/bin/grep \'^SSLProtocol -ALL +SSLv3 +TLSv1\' /etc/apache2/mods-enabled/ssl.conf',
 #    notify => Service [ 'smartmontools' ],
 #}
+
+# change Apache2
+# StartServers from 5 to 1
+# MinSpareServers 5 to 1
+# MaxSpareServers 10 to 3
+file { '/etc/apache2/conf.d/mpmServers.conf': 
+    ensure => present,
+    notify => Service [ 'apache2' ],
+    content => "<IfModule mpm_prefork_module>\n     StartServers          1\n     MinSpareServers       1\n     MaxSpareServers      3/n</IfModule>",
+}
 
 # ensure smartmontools is running
 service { 'smartmontools':
