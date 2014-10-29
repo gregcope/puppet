@@ -12,6 +12,22 @@ augeas { 'smartmontools':
     notify => Service [ 'smartmontools' ],
 }
 
+# switch off graphical grub boot
+# sudo augtool print /files/etc/default/grub/GRUB_CMDLINE_LINUX_DEFAULT = "\"text\""
+augeas { 'GRUB_CMDLINE_LINUX_DEFAULT':
+    context => '/files/etc/default/grub',
+    require => Package['augeas-tools'],
+    changes => 'set GRUB_CMDLINE_LINUX_DEFAULT "text"',
+    notify => Exec [ 'reconfigGrub' ],
+}
+
+# reconfig grub if refreshed
+exec { 'reconfigGrub':
+    logoutput => true,
+    refreshonly => 'true',
+    command => '/usr/sbin/update-grub'
+}
+
 # /dev/sda -a -d sat -o on -S on -s (S/../.././03|L/../../6/03) -m root -M exec /usr/share/smartmontools/smartd-runner
 
 #exec { 'smartd.conf':

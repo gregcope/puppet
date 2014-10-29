@@ -48,15 +48,17 @@ exec { 'restartmythtvbackend':
     command => '/usr/bin/service mythtv-backend restart',
     unless => '/bin/grep "Upgrading to MythTV schema version 1317" /var/log/mythtv/mythbackend.log && /bin/grep "(UpgradeTVDatabaseSchema) Database schema upgrade complete." /var/log/mythtv/mythbackend.log',
     require => Package [ 'libmyth-0.27-0' ],
+    refreshonly=> true,
 }
  
 # tweak mysql to my liking
+# reduced query_cache_size from 32M to 16M
 file { '/etc/mysql/conf.d/mythtv-tweaks.cnf':
     ensure => present,
     mode => '0644',
     owner => 'root',
     group => 'root',
-    content => "[mysqld]\n# The following values were partly taken from:\n# http://www.gossamer-threads.com/lists/mythtv/users/90942#90942\n# and http://www.mythtv.org/wiki/Tune_MySQL\nkey_buffer_size = 64M\n# max_allowed_packet = 8M\ntable_cache = 256\nsort_buffer_size = 48M\nnet_buffer_length = 1M\n# thread_cache_size = 4\nquery_cache_type = 1\nquery_cache_size = 32M\nquery_cache_limit = 3M\ntmp_table_size = 32M\nmax_heap_table_size = 32M\n# don't do binary logs for mythconverg\nbinlog_ignore_db = mythconverg",
+    content => "[mysqld]\n# The following values were partly taken from:\n# http://www.gossamer-threads.com/lists/mythtv/users/90942#90942\n# and http://www.mythtv.org/wiki/Tune_MySQL\nkey_buffer_size = 64M\n# max_allowed_packet = 8M\ntable_cache = 256\nsort_buffer_size = 48M\nnet_buffer_length = 1M\n# thread_cache_size = 4\nquery_cache_type = 1\nquery_cache_size = 16M\nquery_cache_limit = 3M\ntmp_table_size = 32M\nmax_heap_table_size = 32M\n# don't do binary logs for mythconverg\nbinlog_ignore_db = mythconverg",
     require => Package [ 'libmyth-0.27-0' ],
 }
 
@@ -79,10 +81,12 @@ file { '/etc/cron.daily/optimize_mythdb':
 
 # ensure mixer is on to allow sound in myth
 # unless it is already set
+# changed from IEC958,1 to IEC958,0
+# sudo /usr/bin/amixer get 'IEC958',0
 exec { 'amixeriec958':
     logoutput => true,
-    command => '/usr/bin/amixer set \'IEC958\',1 on',
-    unless => '/usr/bin/amixer get \'IEC958\',1 | /bin/grep -F \'[on]\''
+    command => '/usr/bin/amixer set \'IEC958\',0 on',
+    unless => '/usr/bin/amixer get \'IEC958\',0 | /bin/grep -F \'[on]\''
 }
 
 # ensure vol is max for myth

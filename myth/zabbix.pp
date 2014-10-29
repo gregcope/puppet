@@ -262,9 +262,28 @@ exec { 'curldiscoveryDisk':
 # notify zabbix server
 exec {'zabbixServerStartDiscoverers':
      logoutput => true,
-     unless => '/bin/grep "^StartDiscoverers=2" /etc/zabbix/zabbix_server.conf',
-     command => '/usr/bin/perl -p -i -e "s/# StartDiscoverers=1/StartDiscoverers=2/" /etc/zabbix/zabbix_server.conf',
+     unless => '/bin/grep "^StartDiscoverers=1" /etc/zabbix/zabbix_server.conf',
+     command => '/usr/bin/perl -p -i -e "s/.*StartDiscoverers=.*/StartDiscoverers=1/" /etc/zabbix/zabbix_server.conf',
      notify => Service [ 'zabbix-server' ],
      require => Package [ 'zabbix-server-mysql' ],
 }
 
+# reduce number of trappers to 3 from 5 (default) to save some memory/CPU
+# restart server
+exec {'zabbixServeriStartTrappers':
+    logoutput => true,
+    unless => '/bin/grep "^StartTrappers=3" /etc/zabbix/zabbix_server.conf',
+    command => '/usr/bin/perl -p -i -e "s/.*StartTrappers=.*/StartTrappers=3/" /etc/zabbix/zabbix_server.conf',
+    notify => Service [ 'zabbix-server' ],
+    require => Package [ 'zabbix-server-mysql' ],
+}
+
+# reduce the number of pollers to 3 from 5 (default) to save some memory/CPU
+# restart the server
+exec {'zabbixServerStartPollers':
+    logoutput => true,
+    unless => '/bin/grep "^StartPollers=3" /etc/zabbix/zabbix_server.conf',
+    command => '/usr/bin/perl -p -i -e "s/.*StartPollers=.*/StartPollers=3/" /etc/zabbix/zabbix_server.conf',
+    notify => Service [ 'zabbix-server' ],
+    require => Package [ 'zabbix-server-mysql' ],
+}
