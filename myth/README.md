@@ -17,8 +17,13 @@ __You will need to run this as sudo facter_mysqlpassword='PUT YOU MYSQL PASSWORD
 ie;
 
 To run
-''''''
+------
     sudo puppet apply i.pp
     sudo facter_mysqlpassword='bla' puppet apply s.pp
     sudo apt-get update && apt-get dist-upgrade
     sudo facter_mysqlpassword='bla' puppet apply m.pp
+
+Notes
+-----
+
+It is very opinionated ...
