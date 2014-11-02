@@ -13,3 +13,11 @@ To recrete the SQL file, post config;
 `mysqldump -uroot -p mythconverg capturecard cardinput channel videosource channelgroupnames channelgroup settings > mythconverg.sql`
 
 __You will need to run this as sudo facter_mysqlpassword='PUT YOU MYSQL PASSWORD HERE' puppet apply s.pp__ 
+
+ie;
+
+To run
+''''''
+`sudo puppet apply i.pp
+sudo facter_mysqlpassword='bla' puppet apply s.pp
+sudo apt-get update && apt-get dist-upgrade`

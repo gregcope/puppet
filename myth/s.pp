@@ -144,6 +144,14 @@ exec { 'updatenetIpv4TcpTimestamps0':
     notify => Exec[ 'sysctlP' ],
 }
 
+# reboot after 30 secs of a kernel panic ... due to lirc issues
+exec { 'updateKernelPanic30':
+    logoutput => true,
+    command => '/bin/echo "kernel.panic = 30" >> /etc/sysctl.conf',
+    unless => '/bin/grep \'^kernel.panic = 30\' /etc/sysctl.conf',
+    notify => Exec[ 'sysctlP' ],
+}
+
 exec { 'setnetIpv4TcpTimestamps0':
    logoutput => true,
    command => '/bin/echo "net.ipv4.tcp_timestamps = 0" >> /etc/sysctl.conf',
@@ -882,3 +890,10 @@ exec { 'disableMythWebRootRedirect':
     require => Package[ 'apache2' ],
     notify => Service [ 'apache2' ],
 }
+
+# service for lirc
+service { 'lircd':
+    ensure => running,
+}
+
+
