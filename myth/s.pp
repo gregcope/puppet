@@ -890,10 +890,3 @@ exec { 'disableMythWebRootRedirect':
     require => Package[ 'apache2' ],
     notify => Service [ 'apache2' ],
 }
-
-# service for lirc
-service { 'lircd':
-    ensure => running,
-}
-
-
