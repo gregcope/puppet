@@ -18,6 +18,7 @@ ie;
 
 To run
 ''''''
-`sudo puppet apply i.pp
-sudo facter_mysqlpassword='bla' puppet apply s.pp
-sudo apt-get update && apt-get dist-upgrade`
+    sudo puppet apply i.pp
+    sudo facter_mysqlpassword='bla' puppet apply s.pp
+    sudo apt-get update && apt-get dist-upgrade
+    sudo facter_mysqlpassword='bla' puppet apply m.pp
