@@ -52,8 +52,8 @@ class googleAuthSSH {
     # we do not want to limit for localnetwork so just exec without that config
     exec {'AddtoEndofSshd':
       logoutput => true,
-      command => '/bin/echo -en "\n#these lines have to be at the end\nauth [success=1 default=ignore] pam_access.so\nauth required pam_google_authenticato    r.so" >> /etc/pam.d/sshd',
-      unless => '/bin/grep -Pzo \'\n^#these lines have to be at the end\n^auth \[success=1 default=ignore\] pam_access.so\n^auth required pam_google_authen    ticator.so\' /etc/pam.d/sshd',
+      command => '/bin/echo -en "\n#these lines have to be at the end\nauth [success=1 default=ignore] pam_access.so\nauth required pam_google_authenticator.so" >> /etc/pam.d/sshd',
+      unless => '/bin/grep -Pzo \'\n^#these lines have to be at the end\n^auth \[success=1 default=ignore\] pam_access.so\n^auth required pam_google_authenticator.so\' /etc/pam.d/sshd',
       require => [ Package [ 'libpam-google-authenticator' ], File [ '/etc/security/access-local.conf' ], Augeas [ 'sshd_config' ] ],
       notify => Service [ 'ssh' ],
     }
