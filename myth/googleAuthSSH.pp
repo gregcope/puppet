@@ -9,6 +9,7 @@ class googleAuthSSH {
   # http://blog.remibergsma.com/2013/06/08/playing-with-two-facor-authentication-in-linux-using-google-authenticator/
 
   # we will not enable this for the localnetwork
+  # if you do not want this functionality then just have an empty string
   $localnetworkCidr = "192.168.0.0./24"
 
   # install package
