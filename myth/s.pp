@@ -247,7 +247,7 @@ file {'shippingForcastEmail':
 # put the hostfile entry in for qnap
 # require the network interface change
 host { 'qnap.webarmadillo.net':
-    ip => '192.168.0.50',
+    ip => '192.168.1.50',
     comment => 'Added by puppet',
     host_aliases => 'qnap',
     require => [ File['/etc/network/interfaces'] ],
@@ -525,7 +525,7 @@ service { 'postfix':
 # setup basic auth for mythweb from non-lan IPs
 file { '/etc/apache2/conf.d/mythweb-auth':
     ensure => present,
-    content => "<Location /mythweb>\n\tOrder deny,allow\n\tAuthType Basic\n\tAuthName mythweb\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.0.0/24 217.155.57.118 127.0.0.1\n\tSatisfy Any\n</Location>",
+    content => "<Location /mythweb>\n\tOrder deny,allow\n\tAuthType Basic\n\tAuthName mythweb\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.1.0/24 217.155.57.118 127.0.0.1\n\tSatisfy Any\n</Location>",
     mode => '0644',
     notify => Service [ 'apache2' ],
     require => Package [ 'apache2' ],
@@ -719,7 +719,7 @@ file { '/etc/network/interfaces':
     owner => 'root',
     group => 'root',
     mode => '0644',
-    content => "auto lo\niface lo inet loopback\n\tauto eth0\niface eth0 inet static\n\taddress 192.168.0.6\n\tnetmask 255.255.255.0\n\tnetwork 192.168.0.0\n\tbroadcast 192.168.0.255\n\tgateway 192.168.0.1\ndns-nameservers 208.67.220.220 208.67.222.222",
+    content => "auto lo\niface lo inet loopback\n\tauto eth0\niface eth0 inet static\n\taddress 192.168.1.6\n\tnetmask 255.255.255.0\n\tnetwork 192.168.1.0\n\tbroadcast 192.168.1.255\n\tgateway 192.168.1.254\ndns-nameservers 208.67.220.220 208.67.222.222",
     notify => Exec['restarteth0'],
 }
 
@@ -764,8 +764,8 @@ exec { 'ModPagespeedReportUnloadTime_on':
 # Allow access form LAN
 exec { 'AllowFromLAN':
     logoutput => true,
-    unless => '/bin/grep "        Allow from 192.168.0.0/24" /etc/apache2/mods-available/pagespeed.conf',
-    command => '/usr/bin/perl -p -i -e \'s/        Allow from 127.0.0.1/        Allow from 192.168.0.0\/24/g\' /etc/apache2/mods-available/pagespeed.conf',
+    unless => '/bin/grep "        Allow from 192.168.1.0/24" /etc/apache2/mods-available/pagespeed.conf',
+    command => '/usr/bin/perl -p -i -e \'s/        Allow from 127.0.0.1/        Allow from 192.168.1.0\/24/g\' /etc/apache2/mods-available/pagespeed.conf',
     notify => Service [ 'apache2' ],
     require => Exec [ 'wgetinstallpageSpeedDeb' ],
 }

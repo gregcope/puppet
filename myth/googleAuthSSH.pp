@@ -9,7 +9,7 @@ class googleAuthSSH {
   # http://blog.remibergsma.com/2013/06/08/playing-with-two-facor-authentication-in-linux-using-google-authenticator/
 
   # we will not enable this for the localnetwork
-  $localnetwork = "192.168.0.0./24"
+  $localnetwork = "192.168.1.0/24"
 
   # install package
   package { 'libpam-google-authenticator': }
@@ -31,7 +31,7 @@ class googleAuthSSH {
     file {'/etc/security/access-local.conf':
       ensure => present,
       mode => 0644,
-      content => "# Two-factor can be skipped on local network\n+ : ALL : 192.168.0.0/24\n+ : ALL : LOCAL\n- : ALL : ALL\n"
+      content => "# Two-factor can be skipped on local network\n+ : ALL : $localnetwork\n+ : ALL : LOCAL\n- : ALL : ALL\n"
     }
 
     # edit /etc/pam.d/sshd and ensure these next three lines are at the end
