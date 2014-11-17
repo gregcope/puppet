@@ -103,7 +103,7 @@ exec { 'curlArachni':
 # add Apache ossec-wui auth config
 file { '/etc/apache2/conf.d/ossec-wui-auth':
     ensure => present,
-    content => "<Location /ossec-wui>\n\tOrder deny,allow\n\tAuthType Basic\n\tAuthName ossec-wui\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.1.0/24 127.0.0.1\n\tSatisfy Any\n</Location>",
+    content => "<Location /ossec-wui>\n\tOrder deny,allow\n\tAuthType Basic\n\tAuthName ossec-wui\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.1.0/24 $publicIP-www-webarmadillo-net 127.0.0.1\n\tSatisfy Any\n</Location>",
     mode => '0644',
     notify => Service [ 'apache2' ],
     require => Package [ 'apache2' ],

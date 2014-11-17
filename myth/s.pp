@@ -1,5 +1,8 @@
 # set some defaults before we go...
 # $mysqlpassword = ''
+#
+#
+$publicIP-www-webarmadillo-net='80.229.1.98'
 # http://serverfault.com/questions/135030/ubuntu-hangs-on-boot-when-nfs-mounting-entries-in-etc-fstab-but-they-mount-cle
 $nfsOptions='_netdev,bg,actimeo=1800,noatime,nodiratime,nfsvers=3,auto,intr,soft'
 
@@ -525,7 +528,7 @@ service { 'postfix':
 # setup basic auth for mythweb from non-lan IPs
 file { '/etc/apache2/conf.d/mythweb-auth':
     ensure => present,
-    content => "<Location /mythweb>\n\tOrder deny,allow\n\tAuthType Basic\n\tAuthName mythweb\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.1.0/24 217.155.57.118 127.0.0.1\n\tSatisfy Any\n</Location>",
+    content => "<Location /mythweb>\n\tOrder deny,allow\n\tAuthType Basic\n\tAuthName mythweb\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.1.0/24 $publicIP-www-webarmadillo-net 127.0.0.1\n\tSatisfy Any\n</Location>",
     mode => '0644',
     notify => Service [ 'apache2' ],
     require => Package [ 'apache2' ],
