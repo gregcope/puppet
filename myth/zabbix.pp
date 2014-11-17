@@ -179,7 +179,7 @@ file { '/etc/zabbix/zabbix_agentd.d/userparameter_dns.conf':
     mode => '0644',
     owner => 'root',
     group => 'root',
-    content => "UserParameter=custom.dns.response.time[*],/usr/bin/dig +nocmd +noall +stats +time=2 \$1 | grep 'Query time' | awk '{print \$\$4}'\nUserParameter=custom.dns.response.type[*],/usr/bin/dig +nocmd +noall +answer +time=2 \$1 | head -1 | awk '{print \$\$4}'\nUserParameter=custom.dns.response.record[*],/usr/bin/dig +short +time=2 \$1 | head -1\nUserParameter=custom.dns.response.txt,/usr/bin/dig +short +time=2 -t txt \$1\n",
+    content => "UserParameter=custom.dns.response.time[*],/usr/bin/dig +nocmd +noall +stats +time=2 \$1 | grep 'Query time' | awk '{print \$\$4}'\nUserParameter=custom.dns.response.type[*],/usr/bin/dig +nocmd +noall +answer +time=2 \$1 | head -1 | awk '{print \$\$4}'\nUserParameter=custom.dns.response.record[*],/usr/bin/dig +short +time=2 \$1 | head -1\nUserParameter=custom.dns.response.txt[*],/usr/bin/dig +short +time=2 -t txt \$1\n",
     notify => Service [ 'zabbix-agent' ],
     require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
 }
