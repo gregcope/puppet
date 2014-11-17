@@ -179,7 +179,7 @@ file { '/etc/zabbix/zabbix_agentd.d/userparameter_dns.conf':
     mode => '0644',
     owner => 'root',
     group => 'root',
-    content => "UserParameter=custom.dns.response.time[*],/usr/bin/dig +nocmd +noall +stats +time=2 \$1 | grep 'Query time' | awk '{print \$\$4}'\nUserParameter=custom.dns.response.type[*],/usr/bin/dig +nocmd +noall +answer +time=2 \$1 | head -1 | awk '{print \$\$4}'\nUserParameter=custom.dns.response.record[*],/usr/bin/dig +short +time=2 \$1 | head -1",
+    content => "UserParameter=custom.dns.response.time[*],/usr/bin/dig +nocmd +noall +stats +time=2 \$1 | grep 'Query time' | awk '{print \$\$4}'\nUserParameter=custom.dns.response.type[*],/usr/bin/dig +nocmd +noall +answer +time=2 \$1 | head -1 | awk '{print \$\$4}'\nUserParameter=custom.dns.response.record[*],/usr/bin/dig +short +time=2 \$1 | head -1\nUserParameter=custom.dns.response.txt,/usr/bin/dig +short +time=2 -t txt \$1\n",
     notify => Service [ 'zabbix-agent' ],
     require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
 }
@@ -246,7 +246,6 @@ file { '/etc/zabbix/zabbix_agentd.d/userparameter_discovery.conf':
     content => 'UserParameter=custom.disks.discovery_perl,/var/lib/zabbix/discovery_disks.pl',
 }
 
-
 # download and install https://github.com/gregcope/stuff/raw/master/myth/discover_disk.pl
 # unless the sha1sum is cosher
 exec { 'curldiscoveryDisk':
@@ -255,6 +254,28 @@ exec { 'curldiscoveryDisk':
      command => '/usr/bin/curl -OsS https://raw.githubusercontent.com/gregcope/stuff/master/myth/discovery_disks.pl && chmod 755 /var/lib/zabbix/discovery_disks.pl',
      unless => "/usr/bin/sha1sum /var/lib/zabbix/discovery_disks.pl | grep $discovery_disk_sha",
      require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ] ],
+}
+
+# go fet speedtest-cli from github and make it executable
+# unless we have file - naff I know ...
+exec { 'wgetspeedtest-cli':
+     logoutput => true,
+     cwd => '/var/lib/zabbix',
+     command => '/usr/bin/wget -O speedtest-cli https://raw.github.com/sivel/speedtest-cli/master/speedtest_cli.py && /bin/chmod +x speedtest-cli',
+     unless => '/bin/ls /var/lib/zabbix/speedtest-cli',
+}
+
+# speedtest Userparam file
+# from https://github.com/sivel/speedtest-cli
+# requires zabbix agent and wgetspeedtest-cli
+file { '/etc/zabbix/zabbix_agentd.d/userparameter_speedtest.conf':
+    ensure => present,
+    mode => '0644',
+    owner => 'root',
+    group => 'root',
+    notify => Service [ 'zabbix-agent' ],
+    require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ], Exec [ 'wgetspeedtest-cli' ] ],
+    content => "UserParameter=custom.speedtest.ping,/var/lib/zabbix/speedtest-cli --simple | /bin/grep 'Ping' | /usr/bin/awk '{print \$2}'\nUserParameter=custom.speedtest.download,/var/lib/zabbix/speedtest-cli --simple | /bin/grep 'Download' | /usr/bin/awk '{print \$2}'\nUserParameter=custom.speedtest.upload,/var/lib/zabbix/speedtest-cli --simple | /bin/grep 'Upload' | /usr/bin/awk '{print \$2}'\n",
 }
 
 # up the number of Server discovery process
