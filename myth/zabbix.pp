@@ -145,7 +145,6 @@ exec { 'setfqdnInzabbixAgentId':
     require => Package [ 'zabbix-agent' ],
 }
 
-
 # not really needed but we want to bouce it after config changes
 service { 'zabbix-agent':
     ensure => 'running',
@@ -157,7 +156,6 @@ service { 'zabbix-server':
     ensure => 'running',
     enable => 'true',
 }
-
 
 
 # diskstats agent config file
@@ -265,8 +263,20 @@ exec { 'wgetspeedtest-cli':
      unless => '/bin/ls /var/lib/zabbix/speedtest-cli',
 }
 
-# speedtest Userparam file
-# from https://github.com/sivel/speedtest-cli
+# create a cron to run
+# bob=`/var/lib/zabbix/speedtest-cli --simple` ;echo $bob | /usr/bin/awk '{print "ping="$2", upload="$5", download="$8}' | /usr/bin/logger -t speedtest-cli
+# $ tail -10000 /var/log/syslog | grep speedtest-cli | grep -v 'logger'
+# gives this in syslog;
+# Nov 19 12:53:18 s speedtest-cli: ping=14.186, upload=50.42, download=18.36
+cron { 'cronSpeedtest-clieEvery10mins':
+    command => 'bob=`/var/lib/zabbix/speedtest-cli --simple` ;echo $bob | /usr/bin/awk \'{print "ping "$2" download "$5" upload "$8}\' | /usr/bin/logger -t speedtest-cli',
+    user => zabbix,
+    hour => '*',
+    minute => [7, 17, 27, 37, 47, 57],
+    require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ], Exec [ 'wgetspeedtest-cli' ] ],
+}
+
+# grep the last speedtest-cli logging stats from the cron
 # requires zabbix agent and wgetspeedtest-cli
 file { '/etc/zabbix/zabbix_agentd.d/userparameter_speedtest.conf':
     ensure => present,
@@ -275,7 +285,7 @@ file { '/etc/zabbix/zabbix_agentd.d/userparameter_speedtest.conf':
     group => 'root',
     notify => Service [ 'zabbix-agent' ],
     require => [ Package [ 'zabbix-agent' ], File [ '/var/lib/zabbix' ], Exec [ 'wgetspeedtest-cli' ] ],
-    content => "UserParameter=custom.speedtest.ping,/var/lib/zabbix/speedtest-cli --simple | /bin/grep 'Ping' | /usr/bin/awk '{print \$2}'\nUserParameter=custom.speedtest.download,/var/lib/zabbix/speedtest-cli --simple | /bin/grep 'Download' | /usr/bin/awk '{print \$2}'\nUserParameter=custom.speedtest.upload,/var/lib/zabbix/speedtest-cli --simple | /bin/grep 'Upload' | /usr/bin/awk '{print \$2}'\n",
+    content => "UserParameter=custom.speedtest.ping,/usr/bin/tail -1000 /var/log/syslog | /bin/grep 's speedtest-cli' | /bin/grep -v 'CRON' | /usr/bin/tail -1 | /usr/bin/awk '{print \$7}'\nUserParameter=custom.speedtest.download,/usr/bin/tail -1000 /var/log/syslog | /bin/grep 's speedtest-cli' | /bin/grep -v 'CRON' | /usr/bin/tail -1 | /usr/bin/awk '{print \$9}'\nUserParameter=custom.speedtest.upload,/usr/bin/tail -1000 /var/log/syslog | /bin/grep 's speedtest-cli' | /bin/grep -v 'CRON' | /usr/bin/tail -1 | /usr/bin/awk '{print \$11}'\n",
 }
 
 # up the number of Server discovery process
