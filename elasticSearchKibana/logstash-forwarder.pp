@@ -47,7 +47,7 @@ package { 'logstash-forwarder':
 #file { '/etc/logstash-forwarder':
 #    ensure => present,
 #    mode => '0644',
-#    content => "{\n  'network': {\n    'servers': [ '192.168.0.6:5000' ],\n    'timeout': 15,\n    'ssl ca': '/etc/logstash/logstash-forwarder.crt'\n  },\n  'files': [\n      {\n      'paths': [\n        '/var/log/syslog',\n        '/var/log/auth.log'\n       ],\n      'fields': { 'type': 'syslog' }\n     }\n   ]\n}\n",
+#    content => "{\n  'network': {\n    'servers': [ '192.168.1.6:5000' ],\n    'timeout': 15,\n    'ssl ca': '/etc/logstash/logstash-forwarder.crt'\n  },\n  'files': [\n      {\n      'paths': [\n        '/var/log/syslog',\n        '/var/log/auth.log'\n       ],\n      'fields': { 'type': 'syslog' }\n     }\n   ]\n}\n",
 #    require => [ Package [ 'logstash-forwarder' ] ],
 #}
 

@@ -47,7 +47,7 @@ exec { 'cpkibana':
 # otherwise use our standard http passwd file
 file { '/etc/apache2/conf.d/kibana-auth':
      ensure => present,
-     content => "<Location /kibana>\n\tOrder deny,allow\n\tAuthType Basic\n\tAuthName Kibana\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.0.0/24 127.0.0.1\n\tSatisfy Any\n</Location>",
+     content => "<Location /kibana>\n\tOrder deny,allow\n\tAuthType Basic\n\tAuthName Kibana\n\tAuthUserFile /etc/apache2/web-htpassword\n\tRequire valid-user\n\tSatisfy any\n\tDeny from all\n\tAllow from 192.168.1.0/24 127.0.0.1\n\tSatisfy Any\n</Location>",
      mode => '0644',
      notify => Service [ 'apache2' ],
      require => Package [ 'apache2' ],
