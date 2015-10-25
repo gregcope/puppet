@@ -1,11 +1,19 @@
 # You need to run this as 
 # sudo facter_mysqlpassword='PUT YOUR MYSQL PASS HERE' puppet apply s.pp
-
+#
+# disbaled EIT scanning on 2nd DVB Nova-T tunner as described in this thread;
+# http://www.gossamer-threads.com/lists/mythtv/users/445989
+#
 
 # lets make sure we have 0.27 installed
 package { 'libmyth-0.27-0':
     ensure => installed,
 }
+
+
+#### need to add
+# default mythtv is keep 1GB free.. Ops... upto to 100
+#update mythconverg.settings set data=100 where value='AutoExpireExtraSpace'
 
 # force tv cards to appear in the right order
 # to find out which manufacter (and other details - drop the grep)
