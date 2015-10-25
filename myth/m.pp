@@ -15,6 +15,9 @@ package { 'libmyth-0.27-0':
 # default mythtv is keep 1GB free.. Ops... upto to 100
 # update mythconverg.settings set data=100 where value='AutoExpireExtraSpace'
 
+
+
+
 # force tv cards to appear in the right order
 # to find out which manufacter (and other details - drop the grep)
 # udevadm info -a -p $(udevadm info -q path -n /dev/dvb/adapter1/dvr0) | grep prod
