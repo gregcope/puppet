@@ -17,7 +17,6 @@ package { 'libmyth-0.27-0':
 
 
 
-
 # force tv cards to appear in the right order
 # to find out which manufacter (and other details - drop the grep)
 # udevadm info -a -p $(udevadm info -q path -n /dev/dvb/adapter1/dvr0) | grep prod
